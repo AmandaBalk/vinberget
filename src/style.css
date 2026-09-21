@@ -1278,9 +1278,10 @@ details p {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(18, 16, 12, 0.18);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(18, 16, 12, 0.04);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
 }
 
 .newsletter-popup {
@@ -1294,15 +1295,15 @@ details p {
   border-radius: 8px;
   background: rgba(248, 239, 225, 0.98);
   box-shadow: 0 16px 28px rgba(42, 32, 20, 0.14);
-  padding: 1rem 1rem 1.1rem;
+  padding: 1.15rem 1rem 1.1rem;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.7rem;
   transform: var(--newsletter-popup-transform);
   animation: popup-in 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .newsletter-popup h3 {
-  margin: 0;
+  margin: 0.5rem 0 0;
   font-size: clamp(1.4rem, 3.5vw, 1.7rem);
 }
 
@@ -1410,23 +1411,48 @@ details p {
   z-index: 30;
   display: grid;
   place-items: center;
-  padding: 1rem;
-  background: rgba(26, 26, 26, 0.42);
+  padding: 1.25rem;
+  background: rgba(18, 16, 12, 0.12);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .age-gate__dialog {
-  width: min(430px, 100%);
-  padding: 1.35rem;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: rgba(250, 244, 233, 0.98);
-  box-shadow: 0 20px 34px rgba(33, 33, 33, 0.16);
+  width: min(470px, 100%);
+  padding: 1.8rem 1.6rem 1.5rem;
+  border-radius: 18px;
+  border: 1px solid rgba(141, 125, 95, 0.32);
+  background: rgba(250, 244, 233, 0.96);
+  box-shadow: 0 18px 34px rgba(33, 33, 33, 0.12);
+  text-align: center;
+}
+
+.age-gate__dialog h2 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  line-height: 1.08;
+}
+
+.age-gate__text {
+  margin-top: 0.8rem;
+  color: rgba(26, 26, 26, 0.74);
+  line-height: 1.7;
+  font-size: 0.97rem;
 }
 
 .age-gate__actions {
-  margin-top: 0.9rem;
+  margin-top: 1.2rem;
   display: flex;
-  gap: 0.55rem;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.age-gate__actions .primary-button,
+.age-gate__actions .secondary-button {
+  min-width: 180px;
+  justify-content: center;
+  display: inline-flex;
 }
 
 .age-denied {
@@ -1674,9 +1700,10 @@ details p {
   }
 
   .newsletter-backdrop {
-    background: rgba(18, 16, 12, 0.22);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(18, 16, 12, 0.06);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
   }
 
   .newsletter-popup {

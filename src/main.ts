@@ -458,7 +458,6 @@ function showNewsletterPopup(content: SiteContent): void {
 
   popup.innerHTML = `
     <button type="button" class="newsletter-popup__close" aria-label="Stäng" data-newsletter="close">X</button>
-    <p class="eyebrow">Nyhetsbrev</p>
     <h3>${escapeHtml(content.newsletter.title)}</h3>
     <p>${escapeHtml(content.newsletter.text)}</p>
     ${newsletterForm}
@@ -473,6 +472,12 @@ function showNewsletterPopup(content: SiteContent): void {
       hideNewsletterForDays(NEWSLETTER_HIDE_DAYS);
       removeNewsletterPopup();
       return;
+    }
+
+    const clickedCloseButton = target.closest("[data-newsletter='close']");
+    if (clickedCloseButton) {
+      hideNewsletterForDays(NEWSLETTER_HIDE_DAYS);
+      removeNewsletterPopup();
     }
   });
 
@@ -549,8 +554,6 @@ function scheduleNewsletterPopup(content: SiteContent): void {
   if (newsletterTimer) {
     window.clearTimeout(newsletterTimer);
   }
-
-  removeNewsletterPopup();
 
   const route = routeFromHash(window.location.hash);
   if (route.page !== "hem") {
@@ -1018,23 +1021,23 @@ function lockForUnderage(): void {
   `;
 }
 
-function showAgeGate(): void {
+function showAgeGate(content?: SiteContent): boolean {
   if (document.querySelector(".age-gate")) {
-    return;
+    return true;
   }
 
   if (window.sessionStorage.getItem(AGE_VERIFIED_SESSION_KEY) === "yes") {
-    return;
+    return false;
   }
 
   const gate = document.createElement("div");
   gate.className = "age-gate";
   gate.innerHTML = `
     <div class="age-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
-      <p class="eyebrow">Välkomstkontroll</p>
       <h2 id="age-gate-title">Är du över 20 år?</h2>
+      <p class="age-gate__text">Denna hemsida riktar sig till dig som fyllt 20 år. Genom att fortsätta bekräftar du att du uppfyller detta krav.</p>
       <div class="age-gate__actions">
-        <button type="button" data-age="yes" class="primary-button">Ja</button>
+        <button type="button" data-age="yes" class="primary-button">Ja, jag är över 20</button>
         <button type="button" data-age="no" class="secondary-button">Nej</button>
       </div>
     </div>
@@ -1047,6 +1050,9 @@ function showAgeGate(): void {
     if (choice === "yes") {
       window.sessionStorage.setItem(AGE_VERIFIED_SESSION_KEY, "yes");
       gate.remove();
+      if (content) {
+        scheduleNewsletterPopup(content);
+      }
       return;
     }
 
@@ -1056,6 +1062,7 @@ function showAgeGate(): void {
   });
 
   document.body.append(gate);
+  return true;
 }
 
 function enableRestaurantShowMore(): void {
@@ -1232,13 +1239,17 @@ async function init(): Promise<void> {
 
   const content = await loadSiteContent();
   renderApp(content);
-  showAgeGate();
-  scheduleNewsletterPopup(content);
+  const ageGateActive = showAgeGate(content);
+  if (!ageGateActive) {
+    scheduleNewsletterPopup(content);
+  }
 
   window.addEventListener("hashchange", () => {
     renderApp(content);
-    showAgeGate();
-    scheduleNewsletterPopup(content);
+    const ageGateActiveOnHashChange = showAgeGate(content);
+    if (!ageGateActiveOnHashChange) {
+      scheduleNewsletterPopup(content);
+    }
   });
 }
 
