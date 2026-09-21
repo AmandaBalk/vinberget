@@ -1,0 +1,271 @@
+[
+  {
+    "_id": "siteSettings-main",
+    "_type": "siteSettings",
+    "siteName": "Vinberget Vinhandel",
+    "tagline": "Kuraterad vinimport med fingertoppskänsla",
+    "heroText": "Vi representerar personliga producenter med tydligt ursprung och bygger långsiktiga relationer mellan vingård, restaurang och glas.",
+    "restaurantsIntro": "Vi samarbetar med restauranger som söker tydliga uttryck, gastronomisk precision och personlighet i glaset.",
+    "aboutTitle": "Om oss",
+    "aboutBody": "Vinberget Vinhandel arbetar med utvalda producenter och ett sortiment där ursprung, precision och hantverk står i centrum. Vi fokuserar på långsiktiga samarbeten med restauranger och erbjuder även privatkunder tillgång till noga utvalda viner via beställningssortimentet.",
+    "newsletterTitle": "Nyhetsbrev",
+    "newsletterText": "Få nyheter om producenter, allokeringar och lanseringar.",
+    "newsletterCtaLabel": "Anmäl dig till nyhetsbrev"
+  },
+  {
+    "_id": "producer-cantina-san-lorenzo",
+    "_type": "producer",
+    "name": "Domaine Forey Père et Fils",
+    "slug": { "_type": "slug", "current": "domaine-forey-pere-et-fils" },
+    "intro": "Familjeegendom i Valpolicella med fokus på fräschör, elegans och låg intervention.",
+    "vineyard": "Ekologisk odling på kalkrik jord med stor andel äldre stockar. Skördeuttag hålls lågt för koncentration och balans.",
+    "cellar": "Spontanjäsning i cement och äldre botti. Måttlig extraktion och varsam svavelhantering bevarar druvaromatik och textur.",
+    "wines": "Klassiska druvor med modern precision: körsbärsdriven frukt, markerad syra och silkeslena tanniner."
+  },
+  {
+    "_id": "producer-domaine-du-cap",
+    "_type": "producer",
+    "name": "Weingut Tim Röttgerding",
+    "slug": { "_type": "slug", "current": "weingut-tim-rottgerding" },
+    "intro": "Liten producent i södra Rhone som arbetar biodynamiskt med gamla stockar av grenache och mourvedre.",
+    "vineyard": "Mosaik av rullsten och lera med manuellt arbete i varje rad. Fokus på jordhälsa och naturlig biodiversitet.",
+    "cellar": "Jäsning i öppna kar med delvis hela klasar. Lång lagring i neutrala fat för struktur utan tydlig ekprägel.",
+    "wines": "Mörk frukt, örter och mineralitet. Viner med djup, men alltid med sval balans."
+  },
+  {
+    "_id": "producer-weingut-falkenstein",
+    "_type": "producer",
+    "name": "Domaine Bernard-Bonin",
+    "slug": { "_type": "slug", "current": "domaine-bernard-bonin" },
+    "intro": "Moselproducent med rötter i branta skifferlägen och ett kompromisslöst arbete med riesling.",
+    "vineyard": "Handskörd i terrasserade vingårdar med blå och grå skiffer. Selektiv sortering i flera omgångar.",
+    "cellar": "Långsam, sval jäsning i stora gamla fuder. Restsötma används som verktyg för energi och lagringspotential.",
+    "wines": "Riesling med citrus, vit persika och stenig sälta. Hög syra och ren avslutning."
+  },
+  {
+    "_id": "producer-quinta-das-nuvens",
+    "_type": "producer",
+    "name": "Quinta das Nuvens",
+    "slug": { "_type": "slug", "current": "quinta-das-nuvens" },
+    "intro": "Douroprojekt med höghöjdslägen och fokus på transparenta fältblandningar.",
+    "vineyard": "Torra sluttningar på granit och skiffer där gamla blandade stockar ger naturligt låga skördeuttag.",
+    "cellar": "Mjuk extraktion i lagares följt av lagring i stora neutrala fat. Målet är energi framför kraft.",
+    "wines": "Mörka bär, grafit och florala inslag. Stram struktur med lång mineralisk avslutning."
+  },
+  {
+    "_id": "restaurant-bistro-skeppsbron",
+    "_type": "restaurant",
+    "name": "Bistro Skeppsbron",
+    "city": "Stockholm",
+    "description": "Nordisk bistro med säsongsmeny och tydligt fokus på vinpaket."
+  },
+  {
+    "_id": "restaurant-atelje-31",
+    "_type": "restaurant",
+    "name": "Ateljé 31",
+    "city": "Göteborg",
+    "description": "Fine dining med fransk grund och modern skandinavisk tolkning."
+  },
+  {
+    "_id": "restaurant-vinbaren-norr",
+    "_type": "restaurant",
+    "name": "Vinbaren Norr",
+    "city": "Uppsala",
+    "description": "Vinbar med roterande glaslista och återkommande producentkvällar."
+  },
+  {
+    "_id": "restaurant-brasserie-hamnplan",
+    "_type": "restaurant",
+    "name": "Brasserie Hamnplan",
+    "city": "Malmö",
+    "description": "Brasserie med klassisk teknik, hög råvarukvalitet och bred vinprofil."
+  },
+  {
+    "_id": "restaurantPrice-001",
+    "_type": "restaurantPrice",
+    "producer": "Cantina San Lorenzo",
+    "region": "Valpolicella",
+    "wine": "Valpolicella Classico Superiore",
+    "vintage": "2022",
+    "bottle": "750 ml",
+    "price": "198 kr",
+    "notes": "Körsbär, örter och mjuk struktur."
+  },
+  {
+    "_id": "restaurantPrice-002",
+    "_type": "restaurantPrice",
+    "producer": "Cantina San Lorenzo",
+    "region": "Valpolicella",
+    "wine": "Ripasso della Casa",
+    "vintage": "2021",
+    "bottle": "750 ml",
+    "price": "239 kr",
+    "notes": "Djupare frukt med silkeslen tannin."
+  },
+  {
+    "_id": "restaurantPrice-003",
+    "_type": "restaurantPrice",
+    "producer": "Domaine du Cap",
+    "region": "Södra Rhône",
+    "wine": "Cotes du Rhone Villages",
+    "vintage": "2021",
+    "bottle": "750 ml",
+    "price": "228 kr",
+    "notes": "Mörk frukt och örtig energi."
+  },
+  {
+    "_id": "restaurantPrice-004",
+    "_type": "restaurantPrice",
+    "producer": "Domaine du Cap",
+    "region": "Södra Rhône",
+    "wine": "Les Roches Mourvedre",
+    "vintage": "2020",
+    "bottle": "750 ml",
+    "price": "299 kr",
+    "notes": "Mer koncentration, stenig längd."
+  },
+  {
+    "_id": "restaurantPrice-005",
+    "_type": "restaurantPrice",
+    "producer": "Weingut Falkenstein",
+    "region": "Mosel",
+    "wine": "Riesling Kabinett Trocken",
+    "vintage": "2023",
+    "bottle": "750 ml",
+    "price": "215 kr",
+    "notes": "Skifferdriven citrus och precision."
+  },
+  {
+    "_id": "restaurantPrice-006",
+    "_type": "restaurantPrice",
+    "producer": "Weingut Falkenstein",
+    "region": "Mosel",
+    "wine": "Riesling Alte Reben",
+    "vintage": "2022",
+    "bottle": "750 ml",
+    "price": "279 kr",
+    "notes": "Mogen frukt, sälta och lagringskänsla."
+  },
+  {
+    "_id": "restaurantPrice-007",
+    "_type": "restaurantPrice",
+    "producer": "Quinta das Nuvens",
+    "region": "Douro",
+    "wine": "Douro Tinto Reserva",
+    "vintage": "2021",
+    "bottle": "750 ml",
+    "price": "259 kr",
+    "notes": "Grafit, mörka bär och stram kärna."
+  },
+  {
+    "_id": "restaurantPrice-008",
+    "_type": "restaurantPrice",
+    "producer": "Quinta das Nuvens",
+    "region": "Douro",
+    "wine": "Field Blend Branco",
+    "vintage": "2023",
+    "bottle": "750 ml",
+    "price": "232 kr",
+    "notes": "Blommig, sval och mineralisk."
+  },
+  {
+    "_id": "privatePage-main",
+    "_type": "privatePage",
+    "intro": "Alla viner i prislistan beställs via Systembolagets privatimport. Det är en funktion för viner som inte finns i någon av Systembolagets ordinarie sortiment och görs i några enkla steg på Systembolagets hemsida. Du fyller enkelt i namn på de viner du vill ha och att du vill beställa dem via oss. Vi skickar vinerna till butiken, och du hämtar ut dem.\n\nEn privatimport registrerar du genom att logga in på systembolaget.se och sen gå till sidan för privatimport.\n\n1) Välj den butik du vill hämta vinerna i\n2) Ange Vinberget Vinhandel AB som svensk säljare\n3) Ange namnet på det eller de viner du vill köpa från vår prislista. Du registrerar ett vin i taget och anger antal flaskor. Se bild nedan för exempel.\n\nPå vår Instagram hittar du en film (i highlights) hur du registrerar en privatimport.\n\nHör gärna av dig till oss om du har frågor eller vill ha hjälp!",
+    "orderSteps": [
+      "Kontakta oss för aktuella artikelnummer och tillgänglighet.",
+      "Beställ via Systembolagets beställningssortiment, online eller i butik.",
+      "Invänta bekräftelse och leverans till vald butik.",
+      "Hämta ut och servera vid 10-12 grader för vitt och 16-18 grader för rött."
+    ],
+    "priceListTitle": "Privatkund beställning"
+  },
+  {
+    "_id": "privatePrice-001",
+    "_type": "privatePrice",
+    "producer": "Cantina San Lorenzo",
+    "region": "Veneto",
+    "wine": "Soave Classico",
+    "vintage": "2023",
+    "bottle": "750 ml",
+    "price": "219 kr",
+    "notes": "Citrus, mandel och rak syra."
+  },
+  {
+    "_id": "privatePrice-002",
+    "_type": "privatePrice",
+    "producer": "Domaine du Cap",
+    "region": "Södra Rhône",
+    "wine": "Rose de Saignee",
+    "vintage": "2024",
+    "bottle": "750 ml",
+    "price": "199 kr",
+    "notes": "Röda bär och torr avslutning."
+  },
+  {
+    "_id": "privatePrice-003",
+    "_type": "privatePrice",
+    "producer": "Weingut Falkenstein",
+    "region": "Mosel",
+    "wine": "Riesling Feinherb",
+    "vintage": "2023",
+    "bottle": "750 ml",
+    "price": "229 kr",
+    "notes": "Lätt restsötma, lime och krita."
+  },
+  {
+    "_id": "privatePrice-004",
+    "_type": "privatePrice",
+    "producer": "Quinta das Nuvens",
+    "region": "Douro",
+    "wine": "Douro Branco",
+    "vintage": "2022",
+    "bottle": "750 ml",
+    "price": "239 kr",
+    "notes": "Blommig friskhet och mineralitet."
+  },
+  {
+    "_id": "privatePrice-005",
+    "_type": "privatePrice",
+    "producer": "Domaine du Cap",
+    "region": "Södra Rhône",
+    "wine": "Cuvee Heritage",
+    "vintage": "2020",
+    "bottle": "750 ml",
+    "price": "289 kr",
+    "notes": "Passar till lamm och vilt."
+  },
+  {
+    "_id": "privatePrice-006",
+    "_type": "privatePrice",
+    "producer": "Cantina San Lorenzo",
+    "region": "Valpolicella",
+    "wine": "Rosso Verona",
+    "vintage": "2021",
+    "bottle": "750 ml",
+    "price": "249 kr",
+    "notes": "Körsbär, örter och len tannin."
+  },
+  {
+    "_id": "privatePrice-007",
+    "_type": "privatePrice",
+    "producer": "Weingut Falkenstein",
+    "region": "Mosel",
+    "wine": "Riesling Kabinett",
+    "vintage": "2022",
+    "bottle": "750 ml",
+    "price": "259 kr",
+    "notes": "Luftig, stenig och exakt."
+  },
+  {
+    "_id": "privatePrice-008",
+    "_type": "privatePrice",
+    "producer": "Quinta das Nuvens",
+    "region": "Douro",
+    "wine": "Tinta Roriz Reserva",
+    "vintage": "2020",
+    "bottle": "750 ml",
+    "price": "289 kr",
+    "notes": "Mogen mörk frukt och grafit."
+  }
+]
