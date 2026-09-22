@@ -9,4 +9,5 @@ export default defineCliConfig({
     projectId,
     dataset,
   },
+  studioHost: "nid5zklf",
 });
