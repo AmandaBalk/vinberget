@@ -536,18 +536,29 @@ th,
 }
 
 .home-featured-card__link {
-  min-height: 210px;
+  min-height: 145px;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 0.7rem;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  gap: 0.55rem;
   text-decoration: none;
   color: var(--text);
-  padding: 1.15rem 0.35rem 0.95rem;
+  padding: 0.95rem 0.35rem 0.75rem;
 }
 
 .home-featured-card__link h3 {
   font-size: clamp(1.35rem, 2.1vw, 1.65rem);
   line-height: 1.08;
+}
+
+.home-featured-card__origin {
+  color: rgba(56, 51, 45, 0.62);
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
 .home-featured-card__link p {
@@ -562,6 +573,7 @@ th,
 }
 
 .home-featured-card__cta {
+  margin-top: 0.8rem;
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;

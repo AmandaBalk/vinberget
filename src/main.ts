@@ -62,21 +62,6 @@ function toMailto(value: string | undefined): string {
   return trimmed.startsWith("mailto:") ? trimmed : `mailto:${trimmed}`;
 }
 
-function truncateText(value: string, maxLength: number): string {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  const shortened = value.slice(0, maxLength);
-  const lastSpace = shortened.lastIndexOf(" ");
-
-  if (lastSpace <= 0) {
-    return `${shortened.trim()}...`;
-  }
-
-  return `${shortened.slice(0, lastSpace).trim()}...`;
-}
-
 function shuffleCopy<T>(items: T[]): T[] {
   const copy = [...items];
 
@@ -499,7 +484,7 @@ function renderHome(content: SiteContent): string {
       <li class="home-featured-card">
         <a class="home-featured-card__link" href="/vinproducenter/${encodeURIComponent(producer.slug)}">
           <h3>${escapeHtml(producer.name)}</h3>
-          <p>${escapeHtml(truncateText(producer.intro || "Läs mer om producenten.", 135))}</p>
+          ${producer.origin ? `<span class="home-featured-card__origin">${escapeHtml(producer.origin)}</span>` : ""}
           <span class="home-featured-card__cta">Läs producentprofil</span>
         </a>
       </li>
