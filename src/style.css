@@ -331,27 +331,27 @@ th,
 }
 
 .producer-wine-group__heading {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.9rem;
+  display: grid;
+  justify-items: start;
+  gap: 0.18rem;
   margin: 0;
-  padding: 0.75rem 0.55rem 0.65rem;
+  padding: 0.9rem 0.55rem 0.75rem;
 }
 
 .producer-wine-group__name {
   font-family: var(--heading);
-  font-size: clamp(1.22rem, 1.7vw, 1.5rem);
-  font-weight: 500;
+  color: var(--text);
+  font-size: clamp(1.35rem, 1.85vw, 1.65rem);
+  font-weight: 600;
   text-transform: uppercase;
 }
 
 .producer-wine-group__origin {
-  color: rgba(56, 51, 45, 0.64);
-  font-family: var(--heading);
-  font-size: clamp(0.82rem, 1vw, 0.95rem);
+  color: rgba(56, 51, 45, 0.62);
+  font-family: var(--sans);
+  font-size: 0.68rem;
   font-style: normal;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -1120,23 +1120,23 @@ th,
 .restaurants-page > p,
 .restaurants-page .price-item__notes,
 .restaurants-page .restaurant-entry__description {
-  font-size: 0.97rem;
+  font-size: 0.82rem;
   line-height: 1.6;
 }
 
 .restaurants-page .price-item,
 .private-page .price-item {
-  padding: 1.05rem 0;
+  padding: 0.82rem 0;
 }
 
 .restaurants-page .price-item__wine,
 .private-page .price-item__wine {
-  font-size: clamp(1.12rem, 1.55vw, 1.45rem);
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
 }
 
 .restaurants-page .price-item__price,
 .private-page .price-item__price {
-  font-size: clamp(1.04rem, 1.45vw, 1.3rem);
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
 }
 
 .restaurants-page .price-item__meta,
@@ -1152,16 +1152,16 @@ th,
 }
 
 .restaurants-page .restaurant-list__item {
-  padding: 1rem 0;
+  padding: 0.82rem 0;
   border-bottom: 1px solid var(--line);
 }
 
 .restaurants-page .restaurant-entry__name {
-  font-size: 1.35rem;
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
 }
 
 .restaurants-page .restaurant-entry__city {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .private-page {
@@ -1356,7 +1356,7 @@ details p {
 
 .price-table th,
 .price-table td {
-  padding: 0.95rem 0.55rem;
+  padding: 0.72rem 0.55rem;
   border-top: 1px solid rgba(168, 159, 141, 0.34);
   text-align: left;
   vertical-align: top;
@@ -1376,7 +1376,7 @@ details p {
 .price-table tbody .price-table__wine {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.08rem, 1.2vw, 1.35rem);
+  font-size: clamp(0.88rem, 0.95vw, 1.05rem);
   font-family: var(--heading);
   font-weight: 600;
   line-height: 1.2;
@@ -1388,7 +1388,7 @@ details p {
 .price-table__bottle,
 .price-table__notes {
   color: rgba(56, 51, 45, 0.82);
-  font-size: 0.9rem;
+  font-size: clamp(0.88rem, 0.95vw, 1.05rem);
   line-height: 1.5;
 }
 
@@ -1411,7 +1411,7 @@ details p {
   width: 12%;
   color: var(--accent-primary);
   font-family: var(--sans);
-  font-size: 1rem;
+  font-size: clamp(0.88rem, 0.95vw, 1.05rem);
   font-weight: 700;
   line-height: 1.3;
   white-space: nowrap;
@@ -1482,7 +1482,7 @@ details p {
 }
 
 .price-item {
-  padding: 1.05rem 0;
+  padding: 0.82rem 0;
   border-top: 0;
   border-bottom: 1px solid rgba(168, 159, 141, 0.34);
   color: var(--text);
@@ -1507,23 +1507,24 @@ details p {
   margin: 0;
   color: var(--accent-primary);
   font-family: var(--sans);
-  font-size: clamp(1.2rem, 1.8vw, 1.55rem);
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
 
 .price-item__meta {
-  margin-top: 0.6rem;
+  margin-top: 0.42rem;
   color: rgba(56, 51, 45, 0.72);
   letter-spacing: 0.1em;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
 .price-item__notes {
-  margin-top: 0.55rem;
+  margin-top: 0.4rem;
   color: rgba(56, 51, 45, 0.88);
+  font-size: 0.82rem;
   line-height: 1.5;
 }
 
@@ -2169,7 +2170,7 @@ details p {
   }
 
   .price-item {
-    padding: 1.05rem 0;
+    padding: 0.82rem 0;
   }
 
   .price-item__top {
@@ -2177,21 +2178,21 @@ details p {
   }
 
   .price-item__wine {
-    font-size: clamp(1.05rem, 5.8vw, 1.45rem);
+    font-size: clamp(0.92rem, 4.6vw, 1.12rem);
   }
 
   .price-item__price {
-    font-size: clamp(1.05rem, 5.8vw, 1.35rem);
+    font-size: clamp(0.92rem, 4.6vw, 1.12rem);
   }
 
   .price-item__meta {
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
     line-height: 1.35;
   }
 
   .price-item__notes {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     line-height: 1.42;
   }
 
