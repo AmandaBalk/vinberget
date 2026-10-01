@@ -11,19 +11,17 @@ interface Route {
 }
 
 const appElement = document.querySelector<HTMLDivElement>("#app");
-
 if (!appElement) {
   throw new Error("App root element was not found.");
 }
 
 const appRoot = appElement;
-
 const navItems: Array<{ id: PageId; label: string; path: string }> = [
-  { id: "hem", label: "Hem", path: "#/hem" },
-  { id: "om-oss", label: "Om oss", path: "#/om-oss" },
-  { id: "vinproducenter", label: "Vinproducenter", path: "#/vinproducenter" },
-  { id: "restauranger", label: "Restauranger", path: "#/restauranger" },
-  { id: "privatkund", label: "Privatkund", path: "#/privatkund" },
+  { id: "hem", label: "Hem", path: "/hem" },
+  { id: "om-oss", label: "Om oss", path: "/om-oss" },
+  { id: "vinproducenter", label: "Våra producenter", path: "/vinproducenter" },
+  { id: "restauranger", label: "Restaurangkund", path: "/restauranger" },
+  { id: "privatkund", label: "Privatkund", path: "/privatkund" },
 ];
 
 const NEWSLETTER_HIDE_UNTIL_KEY = "vinberget-newsletter-hide-until";
@@ -90,7 +88,7 @@ function shuffleCopy<T>(items: T[]): T[] {
   return copy;
 }
 
-function decodeHashPart(value: string): string {
+function decodePathPart(value: string): string {
   try {
     return decodeURIComponent(value);
   } catch {
@@ -98,15 +96,14 @@ function decodeHashPart(value: string): string {
   }
 }
 
-function routeFromHash(hash: string): Route {
-  const normalized = hash.replace(/^#/, "") || "/hem";
-  const [pathPart, queryString = ""] = normalized.split("?");
-  const parts = pathPart.split("/").filter(Boolean);
-  const query = new URLSearchParams(queryString);
+function routeFromLocation(pathname: string, search: string): Route {
+  const normalized = pathname === "/" ? "/hem" : pathname;
+  const parts = normalized.split("/").filter(Boolean);
+  const query = new URLSearchParams(search);
   const producerSort = query.get("sort") === "origin" ? "origin" : "name";
 
   if (parts[0] === "vinproducenter" && parts[1]) {
-    return { page: "vinproducenter", producerSlug: decodeHashPart(parts[1]) };
+    return { page: "vinproducenter", producerSlug: decodePathPart(parts[1]) };
   }
 
   switch (parts[0]) {
@@ -174,15 +171,58 @@ function updateMeta(route: Route, content: SiteContent): void {
   if (metaDescription) {
     metaDescription.content = description.slice(0, 200);
   }
+
+  let canonicalLink = document.querySelector<HTMLLinkElement>(
+    'link[rel="canonical"]',
+  );
+  if (!canonicalLink) {
+    canonicalLink = document.createElement("link");
+    canonicalLink.rel = "canonical";
+    document.head.append(canonicalLink);
+  }
+  canonicalLink.href = `${window.location.origin}${window.location.pathname}`;
 }
 
-function renderPriceTable(rows: PriceRow[]): string {
+function formatBottleSize(value?: string | null): string {
+  const normalized = value?.trim() ?? "";
+  if (!normalized) {
+    return "";
+  }
+
+  const numericSize = normalized.match(/^(\d+)(?:\s*ml)?$/i)?.[1];
+  return numericSize ? `${numericSize} ML` : normalized.toUpperCase();
+}
+
+function formatPrice(value?: string): string {
+  const normalized = value?.trim() ?? "";
+  const numericPrice = normalized.match(/^(\d+)(?:\s*kr)?$/i)?.[1];
+  return numericPrice ? `${numericPrice} kr` : normalized;
+}
+
+function priceLabel(row: PriceRow): string {
+  if (row.isSoldOut) {
+    return "Slutsåld";
+  }
+
+  if (row.isAllocated) {
+    return "Allokering";
+  }
+
+  return formatPrice(row.price);
+}
+
+function renderPriceTable(
+  rows: PriceRow[],
+  showProducer = true,
+  showColumnLabels = true,
+  showWineColumnLabel = true,
+): string {
   if (rows.length === 0) {
     return '<p class="empty-state">Prislista publiceras inom kort.</p>';
   }
 
-  const initialVisible = 10;
-  const step = 10;
+  const initialVisible = 5;
+  const step = 5;
   const hasShowMore = rows.length > initialVisible;
 
   const tableRows = rows
@@ -192,12 +232,11 @@ function renderPriceTable(rows: PriceRow[]): string {
       const hiddenAttribute = isHidden ? " hidden" : "";
 
       return `
-      <tr${hiddenAttribute}>
+      <tr data-wine-name="${escapeHtml(wineTitle)}"${hiddenAttribute}>
         <th scope="row" class="price-table__wine"><span class="price-cell-text">${escapeHtml(wineTitle)}</span></th>
-        <td class="price-table__producer"><span class="price-cell-text">${escapeHtml(row.producer)}</span></td>
-        <td class="price-table__region"><span class="price-cell-text">${row.region ? escapeHtml(row.region) : ""}</span></td>
-        <td class="price-table__bottle"><span class="price-cell-text">${escapeHtml(row.bottle.toUpperCase())}</span></td>
-        <td class="price-table__price"><span class="price-cell-text">${escapeHtml(row.price)}</span></td>
+        ${showProducer ? `<td class="price-table__producer"><span class="price-cell-text">${escapeHtml(row.producer)}</span></td>` : ""}
+        <td class="price-table__bottle"><span class="price-cell-text">${escapeHtml(formatBottleSize(row.bottle))}</span></td>
+        <td class="price-table__price"><span class="price-cell-text">${escapeHtml(priceLabel(row))}</span></td>
         <td class="price-table__notes"><span class="price-cell-text">${row.notes ? escapeHtml(row.notes) : ""}</span></td>
       </tr>
     `;
@@ -207,23 +246,19 @@ function renderPriceTable(rows: PriceRow[]): string {
   const mobileItems = rows
     .map((row, index) => {
       const wineTitle = `${row.wine}${row.vintage ? ` ${row.vintage}` : ""}`;
-      const metaParts = [row.producer];
+      const metaParts = showProducer ? [row.producer] : [];
       const isHidden = hasShowMore && index >= initialVisible;
       const hiddenAttribute = isHidden ? " hidden" : "";
 
-      if (row.region) {
-        metaParts.push(row.region);
-      }
-
       if (row.bottle) {
-        metaParts.push(row.bottle.toUpperCase());
+        metaParts.push(formatBottleSize(row.bottle));
       }
 
       return `
-      <li class="price-item"${hiddenAttribute}>
+      <li class="price-item" data-wine-name="${escapeHtml(wineTitle)}"${hiddenAttribute}>
         <div class="price-item__top">
           <h3 class="price-item__wine">${escapeHtml(wineTitle)}</h3>
-          <p class="price-item__price">${escapeHtml(row.price)}</p>
+          <p class="price-item__price">${escapeHtml(priceLabel(row))}</p>
         </div>
         <p class="price-item__meta">${escapeHtml(metaParts.join(" • "))}</p>
         ${row.notes ? `<p class="price-item__notes">${escapeHtml(row.notes)}</p>` : ""}
@@ -236,11 +271,10 @@ function renderPriceTable(rows: PriceRow[]): string {
     <div class="price-list-wrap${hasShowMore ? " price-list-wrap--has-fade" : ""}" data-price-list data-visible-count="${initialVisible}" data-step="${step}">
       <div class="price-table-wrap" aria-label="Prislista">
         <table class="price-table">
-          <thead>
+          <thead${showColumnLabels ? "" : ' class="sr-only"'}>
             <tr>
-              <th scope="col">Vin</th>
-              <th scope="col">Producent</th>
-              <th scope="col">Region</th>
+              <th scope="col"${showWineColumnLabel ? "" : ' class="sr-only"'}>Vin</th>
+              ${showProducer ? '<th scope="col">Producent</th>' : ""}
               <th scope="col">Flaska</th>
               <th scope="col">Pris</th>
               <th scope="col">Notering</th>
@@ -256,11 +290,122 @@ function renderPriceTable(rows: PriceRow[]): string {
       </ul>
       ${
         hasShowMore
-          ? '<button type="button" class="secondary-button price-list__more" data-show-more-prices>Visa mer</button>'
+          ? '<button type="button" class="price-list__more" data-show-more-prices>Visa fler</button>'
           : ""
       }
     </div>
   `;
+}
+
+function renderProducerPriceList(
+  rows: PriceRow[],
+  producers: Producer[],
+): string {
+  if (rows.length === 0) {
+    return '<p class="empty-state">Prislista publiceras inom kort.</p>';
+  }
+
+  const groupedRows = new Map<string, PriceRow[]>();
+
+  rows.forEach((row) => {
+    const producerKey = row.producer.trim().toLocaleLowerCase("sv");
+    const producerRows = groupedRows.get(producerKey) ?? [];
+    producerRows.push(row);
+    groupedRows.set(producerKey, producerRows);
+  });
+
+  const groups = Array.from(groupedRows, ([producerKey, wines]) => {
+    const producer = producers.find(
+      (item) => item.name.trim().toLocaleLowerCase("sv") === producerKey,
+    );
+    const origin = producer?.origin || "";
+    const name = producer?.name ?? wines[0].producer.trim();
+    const uniqueWines = new Map<string, PriceRow>();
+
+    for (const wine of wines) {
+      const normalizedWine = {
+        ...wine,
+        producer: name,
+        wine: wine.wine.trim(),
+      };
+      const duplicateKey = JSON.stringify([
+        normalizedWine.wine.toLocaleLowerCase("sv"),
+        normalizedWine.vintage?.trim().toLocaleLowerCase("sv"),
+        normalizedWine.bottle?.trim(),
+        normalizedWine.price?.trim().toLocaleLowerCase("sv"),
+        normalizedWine.isSoldOut,
+        normalizedWine.isAllocated,
+        normalizedWine.wineColor,
+        normalizedWine.notes?.trim(),
+      ]);
+
+      if (!uniqueWines.has(duplicateKey)) {
+        uniqueWines.set(duplicateKey, normalizedWine);
+      }
+    }
+
+    return {
+      name,
+      origin,
+      wines: [...uniqueWines.values()].sort((left, right) =>
+        left.wine.localeCompare(right.wine, "sv", { sensitivity: "base" }),
+      ),
+    };
+  }).sort((left, right) =>
+    left.name.localeCompare(right.name, "sv", { sensitivity: "base" }),
+  );
+
+  const producerGroups = groups
+    .map((group) => {
+      const redWines = group.wines.filter((wine) => wine.wineColor === "Rött");
+      const whiteWines = group.wines.filter(
+        (wine) => wine.wineColor === "Vitt",
+      );
+      const uncategorizedWines = group.wines.filter(
+        (wine) => wine.wineColor !== "Rött" && wine.wineColor !== "Vitt",
+      );
+      const renderWineColorGroup = (title: string, wines: PriceRow[]) => {
+        if (wines.length === 0) {
+          return "";
+        }
+
+        return `
+              <section class="producer-wine-group__category">
+                <h4 class="producer-wine-group__category-title">${escapeHtml(title)}</h4>
+                ${renderPriceTable(wines, false, false)}
+              </section>
+            `;
+      };
+
+      return `
+    <section class="producer-wine-group">
+      <h3 class="producer-wine-group__heading">
+        <span class="producer-wine-group__name">${escapeHtml(group.name)}</span>
+        ${group.origin ? `<span class="producer-wine-group__origin">${escapeHtml(group.origin)}</span>` : ""}
+      </h3>
+      <div class="producer-wine-group__list">
+        <div class="price-table-wrap producer-wine-group__shared-header" aria-hidden="true">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th scope="col" class="price-table__wine">Vin</th>
+                <th scope="col" class="price-table__bottle">Flaska</th>
+                <th scope="col" class="price-table__price">Pris</th>
+                <th scope="col" class="price-table__notes">Notering</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+        ${renderWineColorGroup("Rött", redWines)}
+        ${renderWineColorGroup("Vitt", whiteWines)}
+        ${uncategorizedWines.length > 0 ? renderPriceTable(uncategorizedWines, false, false) : ""}
+      </div>
+    </section>
+  `;
+    })
+    .join("");
+
+  return `<div class="producer-wine-list">${producerGroups}</div>`;
 }
 
 function linkifySystembolagetText(value: string): string {
@@ -352,7 +497,7 @@ function renderHome(content: SiteContent): string {
     .map(
       (producer) => `
       <li class="home-featured-card">
-        <a class="home-featured-card__link" href="#/vinproducenter/${encodeURIComponent(producer.slug)}">
+        <a class="home-featured-card__link" href="/vinproducenter/${encodeURIComponent(producer.slug)}">
           <h3>${escapeHtml(producer.name)}</h3>
           <p>${escapeHtml(truncateText(producer.intro || "Läs mer om producenten.", 135))}</p>
           <span class="home-featured-card__cta">Läs producentprofil</span>
@@ -367,47 +512,21 @@ function renderHome(content: SiteContent): string {
       <section class="home-featured reveal">
         <div class="home-featured__head">
           <h2 class="home-featured__title">Några av våra producenter</h2>
-            <a class="text-link" href="#/vinproducenter">Se alla producenter</a>
+            <a class="text-link" href="/vinproducenter">Se alla producenter</a>
         </div>
         <ul class="home-featured__grid">${featuredProducers}</ul>
       </section>
     `
     : "";
 
-  const partnerNames = shuffleCopy(content.restaurants.partners)
-    .slice(0, 4)
-    .map((partner) => {
-      const location = partner.city ? `, ${escapeHtml(partner.city)}` : "";
-      return `<li>${escapeHtml(partner.name)}${location}</li>`;
-    })
-    .join("");
-
-  const socialProofMarkup = partnerNames
-    ? `
-      <section class="home-proof reveal" aria-label="Utvalda restaurangkunder">
-        <p class="eyebrow">I urval hos</p>
-        <ul class="home-proof__list">${partnerNames}</ul>
-      </section>
-    `
-    : "";
-
   return `
     <section class="hero-panel hero-panel--home reveal">
+      ${content.homeImageUrl ? `<img class="home-hero-image" src="${safeUrl(content.homeImageUrl, "")}" alt="${escapeHtml(content.siteName)}" />` : ""}
       <div class="home-hero-main">
-        <p class="eyebrow">VINBERGET VINHANDEL</p>
         <h1>${escapeHtml(content.tagline)}</h1>
         <p class="lead">${escapeHtml(content.heroText)}</p>
-        <div class="home-actions">
-          <a class="primary-button" href="#/vinproducenter">Se producenter</a>
-          <a class="secondary-button" href="#/om-oss">Om oss</a>
-        </div>
-        <nav class="home-quick-nav" aria-label="Snabbval">
-          <a class="home-quick-nav__link" href="#/restauranger">För restauranger</a>
-          <a class="home-quick-nav__link" href="#/privatkund">För privatkund</a>
-        </nav>
       </div>
     </section>
-    ${socialProofMarkup}
     ${featuredProducerMarkup}
   `;
 }
@@ -555,7 +674,10 @@ function scheduleNewsletterPopup(content: SiteContent): void {
     window.clearTimeout(newsletterTimer);
   }
 
-  const route = routeFromHash(window.location.hash);
+  const route = routeFromLocation(
+    window.location.pathname,
+    window.location.search,
+  );
   if (route.page !== "hem") {
     return;
   }
@@ -568,7 +690,10 @@ function scheduleNewsletterPopup(content: SiteContent): void {
   }
 
   newsletterTimer = window.setTimeout(() => {
-    if (routeFromHash(window.location.hash).page === "hem") {
+    if (
+      routeFromLocation(window.location.pathname, window.location.search)
+        .page === "hem"
+    ) {
       showNewsletterPopup(content);
     }
   }, NEWSLETTER_DELAY_MS);
@@ -600,7 +725,7 @@ function renderProducerList(
   if (producers.length === 0) {
     return `
       <section class="content-card reveal">
-        <h1>Vinproducenter</h1>
+        <h1>${escapeHtml(content.producersTitle)}</h1>
         <p class="empty-state">Producenter publiceras inom kort.</p>
       </section>
     `;
@@ -624,42 +749,34 @@ function renderProducerList(
   });
 
   const items = sortedProducers
-    .map(
-      (producer) => `
+    .map((producer) => {
+      const overviewImageUrl = producer.overviewImageUrl;
+      return `
       <li class="producer-card">
-        <a class="producer-card__link" href="#/vinproducenter/${encodeURIComponent(producer.slug)}">
-          <h3>${escapeHtml(producer.name)}</h3>
-          ${
-            producer.origin
-              ? `<p class="producer-card__origin">${escapeHtml(producer.origin)}</p>`
-              : ""
-          }
-          <p>${escapeHtml(truncateText(producer.intro, 190))}</p>
-          <span class="producer-card__cta">Läs producentprofil</span>
+        <a class="producer-card__link${overviewImageUrl ? " producer-card__link--with-image" : ""}" href="/vinproducenter/${encodeURIComponent(producer.slug)}">
+          ${overviewImageUrl ? `<span class="producer-card__image-frame"><img class="producer-card__image" src="${safeUrl(overviewImageUrl, "")}" alt="${escapeHtml(producer.name)}" loading="lazy" /></span>` : ""}
+          <span class="producer-card__copy">
+            <h3>${escapeHtml(producer.name)}</h3>
+            ${
+              producer.origin
+                ? `<span class="producer-card__origin">${escapeHtml(producer.origin)}</span>`
+                : ""
+            }
+          </span>
         </a>
       </li>
-    `,
-    )
+    `;
+    })
     .join("");
 
   return `
     <section class="content-card reveal producer-overview">
-      <h1>Vinproducenter</h1>
-      <p class="lead-small">Välj en producent för att läsa mer om vingård, källare och viner.</p>
-      <div class="producer-toolbar" aria-label="Sortering">
-        ${
-          producerSort === "origin"
-            ? `
-              <p class="producer-toolbar__status">Sorterar efter <span>Land/Region</span></p>
-              <a class="sort-clear-link" href="#/vinproducenter" aria-label="Återgå till standardsortering">× Återgå</a>
-            `
-            : `
-              <p class="producer-toolbar__status">
-                Sortera efter
-                <a class="sort-link sort-link--inline" href="#/vinproducenter?sort=origin">Land/Region</a>
-              </p>
-            `
-        }
+      <h1>${escapeHtml(content.producersTitle)}</h1>
+      <p class="lead-small">${escapeHtml(content.producersIntro || "Välj en producent för att läsa mer om vingård, källare och viner.")}</p>
+      <div class="producer-toolbar" aria-label="Sortera producenter">
+        <span class="producer-toolbar__label">Sortera efter</span>
+        <a class="sort-link${producerSort === "name" ? " active" : ""}" href="/vinproducenter"${producerSort === "name" ? ' aria-current="true"' : ""}>Namn</a>
+        <a class="sort-link${producerSort === "origin" ? " active" : ""}" href="/vinproducenter?sort=origin"${producerSort === "origin" ? ' aria-current="true"' : ""}>Land/region</a>
       </div>
       <ul class="producer-list">${items}</ul>
     </section>
@@ -742,7 +859,7 @@ function renderProducerPage(producer: Producer): string {
           <p class="eyebrow">Producent</p>
           <h1>${escapeHtml(producer.name)}</h1>
           <p class="producer-hero__intro">${escapeHtml(producer.intro)}</p>
-          <a class="text-link" href="#/vinproducenter">Tillbaka till översikten</a>
+          <a class="text-link" href="/vinproducenter">Tillbaka till översikten</a>
         </div>
       </div>
       <div class="producer-sections producer-sections--accordion">
@@ -797,14 +914,23 @@ function renderRestaurants(content: SiteContent): string {
 
   return `
     <section class="content-card content-card--wide reveal restaurants-page">
-      <h1>Restauranger</h1>
-      <p>${escapeHtml(content.restaurants.priceIntro)}</p>
-      <p class="restaurant-price-contact">För beställning av viner, <a href="#kontakt" class="inline-anchor" data-scroll-to-contact>kontakta oss</a>.</p>
-      <h2 id="restaurang-prislista">${escapeHtml(content.restaurants.priceListTitle)}</h2>
-      ${renderPriceTable(content.restaurants.priceList)}
-      <h2 id="restaurang-kunder">${escapeHtml(content.restaurants.partnersTitle)}</h2>
-      <p class="restaurant-customers-intro">${escapeHtml(content.restaurants.intro)}</p>
-      ${partnerContent}
+      <header class="restaurants-page__intro">
+        <p class="eyebrow">Vinberget vinhandel</p>
+        <h1>${escapeHtml(content.restaurants.pageTitle)}</h1>
+        <p class="restaurants-page__lead">${escapeHtml(content.restaurants.priceIntro)}</p>
+        <p class="restaurant-price-contact">${escapeHtml(content.restaurants.contactPrompt)} <a href="#kontakt" class="inline-anchor" data-scroll-to-contact>${escapeHtml(content.restaurants.contactLinkLabel)}</a>.</p>
+      </header>
+      <section class="restaurants-page__section" aria-labelledby="restaurang-prislista">
+        <header class="restaurant-price-heading">
+          <h2 id="restaurang-prislista">Prislista</h2>
+        </header>
+        ${renderProducerPriceList(content.restaurants.priceList, content.producers)}
+      </section>
+      <section class="restaurants-page__section restaurants-page__partners" aria-labelledby="restaurang-kunder">
+        <h2 id="restaurang-kunder">${escapeHtml(content.restaurants.partnersTitle)}</h2>
+        <p class="restaurant-customers-intro">${escapeHtml(content.restaurants.intro)}</p>
+        ${partnerContent}
+      </section>
     </section>
   `;
 }
@@ -821,12 +947,24 @@ function renderPrivateCustomers(content: SiteContent): string {
 
   return `
     <section class="content-card content-card--wide reveal private-page">
-      <h1>Privatkund</h1>
-      <p>${linkifySystembolagetText(content.privateCustomers.intro)}</p>
-      <h2>Beställning via Systembolaget</h2>
-      ${stepContent}
-      <h2>${escapeHtml(content.privateCustomers.priceListTitle)}</h2>
-      ${renderPriceTable(content.privateCustomers.priceList)}
+      <header class="private-page__intro">
+        <p class="eyebrow">Privatimport</p>
+        <h1>Privatkund</h1>
+        <p class="private-page__lead">${linkifySystembolagetText(content.privateCustomers.intro)}</p>
+      </header>
+      <section class="private-page__ordering" aria-labelledby="private-ordering-title">
+        <header class="private-page__section-heading">
+          <p class="eyebrow">Beställning</p>
+          <h2 id="private-ordering-title">Via Systembolaget</h2>
+        </header>
+        ${stepContent}
+      </section>
+      <section class="private-page__price-section" aria-labelledby="private-price-title">
+        <header class="restaurant-price-heading private-price-heading">
+          <h2 id="private-price-title">${escapeHtml(content.privateCustomers.priceListTitle)}</h2>
+        </header>
+        ${renderProducerPriceList(content.privateCustomers.priceList, content.producers)}
+      </section>
     </section>
   `;
 }
@@ -850,7 +988,7 @@ function renderPage(route: Route, content: SiteContent): string {
         <section class="content-card reveal">
           <h1>Producenten kunde inte hittas</h1>
           <p>Välj en producent från översikten.</p>
-          <a class="text-link" href="#/vinproducenter">Till producentlistan</a>
+          <a class="text-link" href="/vinproducenter">Till producentlistan</a>
         </section>
       `;
     }
@@ -870,7 +1008,10 @@ function renderPage(route: Route, content: SiteContent): string {
 }
 
 function renderApp(content: SiteContent): void {
-  const route = routeFromHash(window.location.hash);
+  const route = routeFromLocation(
+    window.location.pathname,
+    window.location.search,
+  );
   updateMeta(route, content);
 
   const navigation = navItems
@@ -885,7 +1026,7 @@ function renderApp(content: SiteContent): void {
     <div class="background-texture"></div>
     <div class="site-shell">
       <header class="site-header">
-        <a class="brand" href="#/hem" aria-label="Vinberget Vinhandel">
+        <a class="brand" href="/hem" aria-label="Vinberget Vinhandel">
           <img class="brand-logo" src="${brandLogoImg}" alt="${escapeHtml(content.siteName)}" />
         </a>
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Öppna meny">
@@ -946,66 +1087,69 @@ function enableMobileNav(): void {
   };
 
   toggle.addEventListener("click", () => {
-    const isOpen = toggle.getAttribute("aria-expanded") !== "true";
-    setOpen(isOpen);
+    setOpen(toggle.getAttribute("aria-expanded") !== "true");
   });
-
   nav.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement;
-    if (target.closest(".nav-link")) {
+    if ((event.target as HTMLElement).closest(".nav-link")) {
       setOpen(false);
     }
   });
-
-  backdrop.addEventListener("click", () => {
-    setOpen(false);
-  });
+  backdrop.addEventListener("click", () => setOpen(false));
 
   if (mobileNavKeydownHandler) {
     window.removeEventListener("keydown", mobileNavKeydownHandler);
   }
-
   mobileNavKeydownHandler = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
       setOpen(false);
     }
   };
-
   window.addEventListener("keydown", mobileNavKeydownHandler);
 }
 
 function enablePriceListShowMore(): void {
-  const button = document.querySelector<HTMLButtonElement>(
-    "[data-show-more-prices]",
-  );
-  const list = document.querySelector<HTMLUListElement>(".price-list");
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-show-more-prices]")
+    .forEach((button) => {
+      const container = button.closest<HTMLElement>("[data-price-list]");
+      if (!container) {
+        return;
+      }
 
-  if (!button || !list) {
-    return;
-  }
+      const desktopRows = Array.from(
+        container.querySelectorAll<HTMLTableRowElement>(
+          ".price-table tbody tr",
+        ),
+      );
+      const mobileRows = Array.from(
+        container.querySelectorAll<HTMLLIElement>(".price-item"),
+      );
+      const rowCount = Math.max(desktopRows.length, mobileRows.length);
+      const step = Number(container.dataset.step ?? "5");
+      let visibleCount = Number(container.dataset.visibleCount ?? "5");
 
-  const step = Number(button.dataset.step ?? "10");
-  const items = Array.from(
-    list.querySelectorAll<HTMLLIElement>(".price-list__item"),
-  );
-  let visibleCount = Number(list.dataset.visibleCount ?? "10");
+      const applyState = () => {
+        desktopRows.forEach((row, index) => {
+          row.hidden = index >= visibleCount;
+        });
+        mobileRows.forEach((row, index) => {
+          row.hidden = index >= visibleCount;
+        });
+        const isComplete = visibleCount >= rowCount;
+        button.hidden = isComplete;
+        button.disabled = isComplete;
+        if (!isComplete) {
+          button.textContent = "Visa fler";
+        }
+        container.classList.toggle("price-list-wrap--has-fade", !isComplete);
+      };
 
-  const applyState = () => {
-    const isComplete = visibleCount >= items.length;
-    items.forEach((item, index) => {
-      item.hidden = index >= visibleCount;
+      applyState();
+      button.addEventListener("click", () => {
+        visibleCount = Math.min(visibleCount + step, rowCount);
+        applyState();
+      });
     });
-
-    button.hidden = isComplete;
-    button.disabled = isComplete;
-  };
-
-  applyState();
-
-  button.addEventListener("click", () => {
-    visibleCount = Math.min(visibleCount + step, items.length);
-    applyState();
-  });
 }
 
 function lockForUnderage(): void {
@@ -1099,10 +1243,46 @@ function enableRestaurantShowMore(): void {
   });
 }
 
-function ensureDefaultRoute(): void {
-  if (!window.location.hash) {
-    window.location.replace("#/hem");
+function isInternalNavigableLink(anchor: HTMLAnchorElement): boolean {
+  if (anchor.target === "_blank" || anchor.hasAttribute("download")) {
+    return false;
   }
+
+  const href = anchor.getAttribute("href");
+  if (!href || href.startsWith("#") || href.startsWith("mailto:")) {
+    return false;
+  }
+
+  return anchor.origin === window.location.origin;
+}
+
+function enableInternalLinkNavigation(onNavigate: () => void): void {
+  document.addEventListener("click", (event) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const anchor = (event.target as HTMLElement).closest("a");
+    if (!anchor || !isInternalNavigableLink(anchor)) {
+      return;
+    }
+
+    event.preventDefault();
+    const destination = anchor.pathname + anchor.search;
+    if (destination !== window.location.pathname + window.location.search) {
+      window.history.pushState({}, "", destination);
+    }
+    onNavigate();
+  });
+
+  window.addEventListener("popstate", onNavigate);
 }
 
 function animateProducerAccordion(
@@ -1235,7 +1415,6 @@ function enableContactAnchorScroll(): void {
 
 async function init(): Promise<void> {
   appRoot.innerHTML = '<p class="loading">Laddar innehåll...</p>';
-  ensureDefaultRoute();
 
   const content = await loadSiteContent();
   renderApp(content);
@@ -1244,10 +1423,10 @@ async function init(): Promise<void> {
     scheduleNewsletterPopup(content);
   }
 
-  window.addEventListener("hashchange", () => {
+  enableInternalLinkNavigation(() => {
     renderApp(content);
-    const ageGateActiveOnHashChange = showAgeGate(content);
-    if (!ageGateActiveOnHashChange) {
+    const ageGateActiveOnNavigate = showAgeGate(content);
+    if (!ageGateActiveOnNavigate) {
       scheduleNewsletterPopup(content);
     }
   });

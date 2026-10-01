@@ -4,55 +4,88 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 
 ## Dokumenttyper
 
-1. siteSettings
+1. homePage
 - siteName (string)
 - tagline (string)
 - heroText (text)
-- restaurantsIntro (text)
-- aboutTitle (string)
-- aboutBody (text)
-- aboutImage (image)
-- newsletterTitle (string)
-- newsletterText (text)
-- newsletterCtaLabel (string)
-- newsletterEmbedUrl (url, Mailchimp-formulärets action-URL)
+- homeImage (image)
 
-2. producer
+2. aboutPage
+- title (string)
+- body (text)
+- image (image)
+
+3. producerPage
+- intro (text)
+
+4. producer
 - name (string)
 - slug (slug, unik)
-- heroImage (image)
+- origin (string)
+- overviewImage (image, frivillig, visas på producentöversikten)
+- heroImage (image, visas på den enskilda producentens sida)
 - intro (text)
 - vineyard (text)
 - cellar (text)
 - wines (text)
 
-3. restaurant
+5. restaurantPage
+- priceIntro (text)
+- intro (text)
+
+6. restaurant
 - name (string)
 - city (string)
 - description (text)
 
-4. restaurantPrice
+7. restaurantPrice
 - producer (string)
-- region (string)
 - wine (string)
 - vintage (string)
 - bottle (string)
 - price (string)
 - notes (string)
 
-5. privatePage
+8. privatePage
 - intro (text)
 - orderSteps (array av string)
 - priceListTitle (string)
 
-6. privatePrice
+9. privatePrice
 - producer (string)
-- region (string)
 - wine (string)
 - vintage (string)
 - bottle (string)
 - price (string)
 - notes (string)
+
+10. contactPage
+- email (string)
+- instagramUrl (url)
+- linkedinUrl (url)
+- newsletterTitle (string)
+- newsletterText (text)
+- newsletterCtaLabel (string)
+- newsletterEmbedUrl (url)
+
+11. siteSettings (legacy, migreras till sidodokumenten)
+- siteName (string)
+- tagline (string)
+- heroText (text)
+- homeImage (image)
+- producersIntro (text)
+- restaurantsIntro (text)
+- restaurantsPriceIntro (text)
+- aboutTitle (string)
+- aboutBody (text)
+- aboutImage (image)
+- footerEmail (string)
+- footerInstagramUrl (url)
+- footerLinkedinUrl (url)
+- newsletterTitle (string)
+- newsletterText (text)
+- newsletterCtaLabel (string)
+- newsletterEmbedUrl (url)
 
 ## Frontend-rutter
 

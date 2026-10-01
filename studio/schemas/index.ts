@@ -1,6 +1,11 @@
 export { privatePage } from "./privatePage";
 export { privatePrice } from "./privatePrice";
+export { aboutPage } from "./aboutPage";
+export { contactPage } from "./contactPage";
+export { homePage } from "./homePage";
+export { producerPage } from "./producerPage";
 export { producer } from "./producer";
 export { restaurant } from "./restaurant";
+export { restaurantPage } from "./restaurantPage";
 export { restaurantPrice } from "./restaurantPrice";
 export { siteSettings } from "./siteSettings";

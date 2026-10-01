@@ -24,6 +24,20 @@ export const siteSettings = {
       validation: (Rule) => Rule.required().min(30).max(320),
     },
     {
+      name: "homeImage",
+      title: "Bild på startsidan",
+      type: "image",
+      options: { hotspot: true },
+      description: "Visas ovanför rubriken på startsidan.",
+    },
+    {
+      name: "producersIntro",
+      title: "Introduktion till producentöversikten",
+      type: "text",
+      rows: 3,
+      description: "Texten som visas under rubriken Våra producenter.",
+    },
+    {
       name: "restaurantsPriceIntro",
       title: "Text ovanför prislista för Restauranger",
       type: "text",

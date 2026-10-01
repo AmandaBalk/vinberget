@@ -16,9 +16,18 @@ This folder contains the editorial interface for Vinberget.
 
 ## Content types
 
-- siteSettings
+- homePage
+- aboutPage
+- producerPage
 - producer
+- restaurantPage
 - restaurant
 - restaurantPrice
 - privatePage
 - privatePrice
+- contactPage
+- siteSettings (legacy, retained until migration is complete)
+
+## Migrate existing page content
+
+The old `siteSettings` document remains as a read fallback until the page documents are created. Sign in to Sanity CLI with an account that can edit the dataset, then run `npm run migrate:site-settings` from this folder. The migration uses the CLI's logged-in token, creates the new page documents only when none of them exist, and keeps the legacy document untouched.

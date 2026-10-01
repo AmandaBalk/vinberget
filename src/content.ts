@@ -8,6 +8,7 @@ const CONTENT_CACHE_TTL_MS = 2 * 60 * 1000;
 const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}`;
 
 type SiteSettingsQuery = Partial<SiteContent> & {
+  producersIntro?: string;
   restaurantsIntro?: string;
   restaurantsPriceIntro?: string;
 };
@@ -16,6 +17,9 @@ const fallbackContent: SiteContent = {
   siteName: "Vinberget Vinhandel",
   tagline: "",
   heroText: "",
+  homeImageUrl: "",
+  producersTitle: "Vinproducenter",
+  producersIntro: "",
   footer: {
     email: "",
     instagramUrl: "",
@@ -28,6 +32,9 @@ const fallbackContent: SiteContent = {
   restaurantsIntro: "",
   producers: [],
   restaurants: {
+    pageTitle: "För restaurangkunder",
+    contactPrompt: "För beställning av viner,",
+    contactLinkLabel: "kontakta oss",
     priceIntro: "",
     intro: "",
     partnersTitle: "Våra restaurangkunder",
@@ -50,6 +57,13 @@ const fallbackContent: SiteContent = {
 
 type SanityContentBundle = {
   site?: SiteSettingsQuery;
+  restaurantsPriceIntro?: string;
+  restaurantsIntro?: string;
+  restaurantPage?: Pick<
+    SiteContent["restaurants"],
+    "pageTitle" | "contactPrompt" | "contactLinkLabel"
+  >;
+  producerPage?: Pick<SiteContent, "producersTitle" | "producersIntro">;
   producers?: SiteContent["producers"];
   restaurants?: SiteContent["restaurants"]["partners"];
   restaurantPrices?: SiteContent["restaurants"]["priceList"];
@@ -58,33 +72,44 @@ type SanityContentBundle = {
 };
 
 const contentBundleQuery = encodeURIComponent(`{
-  "site": *[_type == "siteSettings"][0]{
-    siteName,
-    tagline,
-    heroText,
-    restaurantsPriceIntro,
-    restaurantsIntro,
+  "site": {
+    "siteName": coalesce(*[_type == "homePage"][0].siteName, *[_type == "siteSettings"][0].siteName),
+    "tagline": coalesce(*[_type == "homePage"][0].tagline, *[_type == "siteSettings"][0].tagline),
+    "heroText": coalesce(*[_type == "homePage"][0].heroText, *[_type == "siteSettings"][0].heroText),
+    "homeImageUrl": coalesce(*[_type == "homePage"][0].homeImage.asset->url, *[_type == "siteSettings"][0].homeImage.asset->url),
     "footer": {
-      "email": coalesce(footerEmail, ""),
-      "instagramUrl": coalesce(footerInstagramUrl, ""),
-      "linkedinUrl": coalesce(footerLinkedinUrl, "")
+      "email": coalesce(*[_type == "contactPage"][0].email, *[_type == "siteSettings"][0].footerEmail, ""),
+      "instagramUrl": coalesce(*[_type == "contactPage"][0].instagramUrl, *[_type == "siteSettings"][0].footerInstagramUrl, ""),
+      "linkedinUrl": coalesce(*[_type == "contactPage"][0].linkedinUrl, *[_type == "siteSettings"][0].footerLinkedinUrl, "")
     },
     "about": {
-      "title": coalesce(aboutTitle, "Om oss"),
-      "body": coalesce(aboutBody, ""),
-      "imageUrl": aboutImage.asset->url
+      "title": coalesce(*[_type == "aboutPage"][0].title, *[_type == "siteSettings"][0].aboutTitle, "Om oss"),
+      "body": coalesce(*[_type == "aboutPage"][0].body, *[_type == "siteSettings"][0].aboutBody, ""),
+      "imageUrl": coalesce(*[_type == "aboutPage"][0].image.asset->url, *[_type == "siteSettings"][0].aboutImage.asset->url)
     },
     "newsletter": {
-      "title": coalesce(newsletterTitle, "Nyhetsbrev"),
-      "text": coalesce(newsletterText, ""),
-      "ctaLabel": coalesce(newsletterCtaLabel, "Anmäl dig till nyhetsbrev"),
-      "embedUrl": newsletterEmbedUrl
+      "title": coalesce(*[_type == "contactPage"][0].newsletterTitle, *[_type == "siteSettings"][0].newsletterTitle, "Nyhetsbrev"),
+      "text": coalesce(*[_type == "contactPage"][0].newsletterText, *[_type == "siteSettings"][0].newsletterText, ""),
+      "ctaLabel": coalesce(*[_type == "contactPage"][0].newsletterCtaLabel, *[_type == "siteSettings"][0].newsletterCtaLabel, "Anmäl dig till nyhetsbrev"),
+      "embedUrl": coalesce(*[_type == "contactPage"][0].newsletterEmbedUrl, *[_type == "siteSettings"][0].newsletterEmbedUrl)
     }
   },
+  "restaurantPage": {
+    "pageTitle": coalesce(*[_type == "restaurantPage"][0].pageTitle, "För restaurangkunder"),
+    "contactPrompt": coalesce(*[_type == "restaurantPage"][0].contactPrompt, "För beställning av viner,"),
+    "contactLinkLabel": coalesce(*[_type == "restaurantPage"][0].contactLinkLabel, "kontakta oss")
+  },
+  "producerPage": {
+    "producersTitle": coalesce(*[_type == "producerPage"][0].pageTitle, "Vinproducenter"),
+    "producersIntro": coalesce(*[_type == "producerPage"][0].intro, *[_type == "siteSettings"][0].producersIntro, "Välj en producent för att läsa mer om vingård, källare och viner.")
+  },
+  "restaurantsPriceIntro": coalesce(*[_type == "restaurantPage"][0].priceIntro, *[_type == "siteSettings"][0].restaurantsPriceIntro),
+  "restaurantsIntro": coalesce(*[_type == "restaurantPage"][0].intro, *[_type == "siteSettings"][0].restaurantsIntro),
   "producers": *[_type == "producer"]|order(name asc){
     "slug": slug.current,
     name,
     origin,
+    "overviewImageUrl": overviewImage.asset->url,
     "heroImageUrl": heroImage.asset->url,
     imageCaption,
     "additionalImages": additionalImages[]{
@@ -103,20 +128,24 @@ const contentBundleQuery = encodeURIComponent(`{
   },
   "restaurantPrices": *[_type == "restaurantPrice"]|order(producer asc, wine asc){
     producer,
-    region,
     wine,
     vintage,
+    wineColor,
     bottle,
     price,
+    isSoldOut,
+    isAllocated,
     notes
   },
   "privatePrices": *[_type == "privatePrice"]|order(producer asc, wine asc){
     producer,
-    region,
     wine,
     vintage,
+    wineColor,
     bottle,
     price,
+    isSoldOut,
+    isAllocated,
     notes
   },
   "privateInfo": *[_type == "privatePage"][0]{
@@ -208,11 +237,24 @@ export async function loadSiteContent(): Promise<SiteContent> {
         ...fallbackContent.footer,
         ...(site as Partial<SiteContent>)?.footer,
       },
+      producersTitle:
+        bundle.producerPage?.producersTitle ?? fallbackContent.producersTitle,
+      producersIntro:
+        bundle.producerPage?.producersIntro ??
+        site.producersIntro ??
+        fallbackContent.producersIntro,
       producers: producers.length > 0 ? producers : [],
       restaurants: {
         ...fallbackContent.restaurants,
-        priceIntro: site.restaurantsPriceIntro ?? "",
-        intro: site.restaurantsIntro ?? "",
+        ...bundle.restaurantPage,
+        priceIntro:
+          bundle.restaurantsPriceIntro ??
+          site.restaurantsPriceIntro ??
+          fallbackContent.restaurants.priceIntro,
+        intro:
+          bundle.restaurantsIntro ??
+          site.restaurantsIntro ??
+          fallbackContent.restaurants.intro,
         partners: restaurants.length > 0 ? restaurants : [],
         priceList: restaurantPrices.length > 0 ? restaurantPrices : [],
       },

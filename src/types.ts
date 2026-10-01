@@ -9,6 +9,7 @@ export interface Producer {
   slug: string;
   name: string;
   origin?: string;
+  overviewImageUrl?: string;
   heroImageUrl?: string;
   imageCaption?: string;
   additionalImages?: Array<{
@@ -29,11 +30,13 @@ export interface Restaurant {
 
 export interface PriceRow {
   producer: string;
-  region?: string;
   wine: string;
   vintage?: string;
-  bottle: string;
-  price: string;
+  wineColor?: "Rött" | "Vitt";
+  bottle?: string | null;
+  price?: string;
+  isSoldOut?: boolean;
+  isAllocated?: boolean;
   notes?: string;
 }
 
@@ -41,6 +44,9 @@ export interface SiteContent {
   siteName: string;
   tagline: string;
   heroText: string;
+  homeImageUrl?: string;
+  producersTitle: string;
+  producersIntro?: string;
   restaurantsIntro?: string;
   footer: {
     email: string;
@@ -54,6 +60,9 @@ export interface SiteContent {
   };
   producers: Producer[];
   restaurants: {
+    pageTitle: string;
+    contactPrompt: string;
+    contactLinkLabel: string;
     priceIntro: string;
     intro: string;
     partnersTitle: string;

@@ -24,9 +24,18 @@ export const producer = {
       validation: (Rule) => Rule.required().min(2).max(120),
     },
     {
-      name: "heroImage",
-      title: "Toppbild",
+      name: "overviewImage",
+      title: "Bild på översiktssidan",
       type: "image",
+      description:
+        "Egen bild som endast visas på sidan Våra producenter. Den är separat från bilden på detaljsidan.",
+      options: { hotspot: true },
+    },
+    {
+      name: "heroImage",
+      title: "Bild på detaljsidan",
+      type: "image",
+      description: "Visas när besökaren öppnar den enskilda producenten.",
       options: { hotspot: true },
     },
     {
