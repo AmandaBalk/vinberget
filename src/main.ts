@@ -1218,6 +1218,7 @@ function enableRestaurantShowMore(): void {
 
     button.hidden = isComplete;
     button.disabled = isComplete;
+    list.classList.toggle("restaurant-list--has-fade", !isComplete);
   };
 
   applyState();
