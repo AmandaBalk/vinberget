@@ -78,6 +78,8 @@ export const producer = {
       title: "Presentation",
       type: "text",
       rows: 6,
+      description:
+        "Dela gärna upp texten i korta stycken med en tom rad. Mycket långa presentationer delas automatiskt och visas först delvis.",
       validation: (Rule) => Rule.required().min(30),
     },
     {

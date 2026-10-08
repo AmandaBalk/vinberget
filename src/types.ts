@@ -1,3 +1,5 @@
+import type { SanityImageObject } from "@sanity/image-url";
+
 export type PageId =
   | "hem"
   | "om-oss"
@@ -9,10 +11,13 @@ export interface Producer {
   slug: string;
   name: string;
   origin?: string;
+  overviewImage?: SanityImageObject;
   overviewImageUrl?: string;
+  heroImage?: SanityImageObject;
   heroImageUrl?: string;
   imageCaption?: string;
   additionalImages?: Array<{
+    image?: SanityImageObject;
     url?: string;
     caption?: string;
   }>;

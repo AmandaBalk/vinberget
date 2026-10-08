@@ -1,7 +1,7 @@
 import "./style.css";
 import heroImg from "./assets/hero.png";
 import brandLogoImg from "./assets/Logga_vinberget_mellan_transparent.png";
-import { loadSiteContent } from "./content";
+import { getSanityImageUrl, loadSiteContent } from "./content";
 import type { PageId, PriceRow, Producer, SiteContent } from "./types";
 
 interface Route {
@@ -39,6 +39,34 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function splitProducerIntroIntoParagraphs(value: string): string[] {
+  const sentenceSegmenter = new Intl.Segmenter("sv", {
+    granularity: "sentence",
+  });
+  const textBlocks = value
+    .trim()
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return textBlocks.flatMap((block) => {
+    const sentences = Array.from(
+      sentenceSegmenter.segment(block),
+      ({ segment }) => segment.trim(),
+    ).filter(Boolean);
+
+    if (sentences.length <= 4) {
+      return [block];
+    }
+
+    const paragraphs: string[] = [];
+    for (let index = 0; index < sentences.length; index += 4) {
+      paragraphs.push(sentences.slice(index, index + 4).join(" "));
+    }
+    return paragraphs;
+  });
 }
 
 function safeUrl(value: string | undefined, fallback: string): string {
@@ -735,7 +763,9 @@ function renderProducerList(
 
   const items = sortedProducers
     .map((producer) => {
-      const overviewImageUrl = producer.overviewImageUrl;
+      const overviewImageUrl =
+        getSanityImageUrl(producer.overviewImage, 960, 720) ??
+        producer.overviewImageUrl;
       return `
       <li class="producer-card">
         <a class="producer-card__link${overviewImageUrl ? " producer-card__link--with-image" : ""}" href="/vinproducenter/${encodeURIComponent(producer.slug)}">
@@ -769,28 +799,55 @@ function renderProducerList(
 }
 
 function renderProducerPage(producer: Producer): string {
+  const introParagraphs = splitProducerIntroIntoParagraphs(producer.intro);
+  const shouldCollapseIntro =
+    producer.intro.trim().length > 900 && introParagraphs.length > 2;
+  const visibleIntroParagraphs = shouldCollapseIntro
+    ? introParagraphs.slice(0, 2)
+    : introParagraphs;
+  const remainingIntroParagraphs = shouldCollapseIntro
+    ? introParagraphs.slice(2)
+    : [];
+  const renderIntroParagraphs = (paragraphs: string[]) =>
+    paragraphs
+      .map(
+        (paragraph) =>
+          `<p class="producer-hero__intro-paragraph">${escapeHtml(paragraph)}</p>`,
+      )
+      .join("");
   const additionalImages = (producer.additionalImages ?? []).filter((item) =>
-    Boolean(item.url),
+    Boolean(item.image || item.url),
   );
   const secondaryImage = additionalImages[0];
   const mobileGalleryImages = [
     {
+      image: producer.heroImage,
       url: producer.heroImageUrl,
       caption: producer.imageCaption,
       alt: producer.name,
     },
     ...additionalImages.map((item, index) => ({
+      image: item.image,
       url: item.url,
       caption: item.caption,
       alt: `${producer.name} bild ${index + 2}`,
     })),
   ];
+  const heroImageUrl =
+    getSanityImageUrl(
+      producer.heroImage,
+      secondaryImage ? 800 : 1200,
+      secondaryImage ? 900 : 900,
+    ) ?? producer.heroImageUrl;
+  const secondaryImageUrl = secondaryImage
+    ? (getSanityImageUrl(secondaryImage.image, 600, 1000) ?? secondaryImage.url)
+    : undefined;
 
   const producerMedia = secondaryImage
     ? `
         <div class="producer-diptych">
           <figure class="producer-diptych__primary">
-            <img class="producer-hero__image producer-hero__image--primary" src="${safeUrl(producer.heroImageUrl, heroImg)}" alt="${escapeHtml(producer.name)}" />
+            <img class="producer-hero__image producer-hero__image--primary" src="${safeUrl(heroImageUrl, heroImg)}" alt="${escapeHtml(producer.name)}" />
             ${
               producer.imageCaption
                 ? `<figcaption class="producer-hero__caption">${escapeHtml(producer.imageCaption)}</figcaption>`
@@ -798,7 +855,7 @@ function renderProducerPage(producer: Producer): string {
             }
           </figure>
           <figure class="producer-diptych__secondary">
-            <img class="producer-diptych__image" src="${safeUrl(secondaryImage.url, heroImg)}" alt="${escapeHtml(`${producer.name} detalj`)}" />
+            <img class="producer-diptych__image" src="${safeUrl(secondaryImageUrl, heroImg)}" alt="${escapeHtml(`${producer.name} detalj`)}" />
             ${
               secondaryImage.caption
                 ? `<figcaption class="producer-hero__caption">${escapeHtml(secondaryImage.caption)}</figcaption>`
@@ -812,7 +869,7 @@ function renderProducerPage(producer: Producer): string {
               .map(
                 (image) => `
                   <figure class="producer-mobile-gallery__slide">
-                    <img class="producer-mobile-gallery__image" src="${safeUrl(image.url, heroImg)}" alt="${escapeHtml(image.alt)}" />
+                    <img class="producer-mobile-gallery__image" src="${safeUrl(getSanityImageUrl(image.image, 1200, 900) ?? image.url, heroImg)}" alt="${escapeHtml(image.alt)}" />
                     ${
                       image.caption
                         ? `<figcaption class="producer-hero__caption">${escapeHtml(image.caption)}</figcaption>`
@@ -826,7 +883,7 @@ function renderProducerPage(producer: Producer): string {
         </div>
       `
     : `
-        <img class="producer-hero__image producer-hero__image--primary" src="${safeUrl(producer.heroImageUrl, heroImg)}" alt="${escapeHtml(producer.name)}" />
+        <img class="producer-hero__image producer-hero__image--primary" src="${safeUrl(heroImageUrl, heroImg)}" alt="${escapeHtml(producer.name)}" />
         ${
           producer.imageCaption
             ? `<p class="producer-hero__caption">${escapeHtml(producer.imageCaption)}</p>`
@@ -843,7 +900,20 @@ function renderProducerPage(producer: Producer): string {
         <div class="producer-hero__panel">
           <p class="eyebrow">Producent</p>
           <h1>${escapeHtml(producer.name)}</h1>
-          <p class="producer-hero__intro">${escapeHtml(producer.intro)}</p>
+          <div class="producer-hero__intro">
+            ${renderIntroParagraphs(visibleIntroParagraphs)}
+            ${
+              remainingIntroParagraphs.length
+                ? `<details class="producer-intro-more">
+                    <summary>
+                      <span class="producer-intro-more__show">Visa hela presentationen</span>
+                      <span class="producer-intro-more__hide">Visa mindre</span>
+                    </summary>
+                    <div class="producer-intro-more__content">${renderIntroParagraphs(remainingIntroParagraphs)}</div>
+                  </details>`
+                : ""
+            }
+          </div>
           <a class="text-link" href="/vinproducenter">Tillbaka till översikten</a>
         </div>
       </div>

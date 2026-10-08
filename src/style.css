@@ -796,8 +796,7 @@ th,
   position: relative;
   display: block;
   width: 100%;
-  height: 240px;
-  aspect-ratio: 1.65 / 1;
+  aspect-ratio: 4 / 3;
   border: 1px solid rgba(141, 125, 95, 0.32);
   border-radius: 6px;
   overflow: hidden;
@@ -927,8 +926,19 @@ th,
 }
 
 .producer-hero__image--primary {
-  height: clamp(420px, 48vw, 560px);
-  min-height: 420px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.producer-diptych__primary .producer-hero__image--primary {
+  aspect-ratio: 8 / 9;
+}
+
+.producer-diptych__image {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 3 / 5;
 }
 
 .producer-hero__caption {
@@ -956,6 +966,43 @@ th,
   max-width: 40ch;
   font-size: 1.05rem;
   line-height: 1.76;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.producer-hero__intro-paragraph {
+  margin: 0;
+}
+
+.producer-intro-more summary {
+  width: fit-content;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  list-style: none;
+}
+
+.producer-intro-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.producer-intro-more__hide,
+.producer-intro-more[open] .producer-intro-more__show {
+  display: none;
+}
+
+.producer-intro-more[open] .producer-intro-more__hide {
+  display: inline;
+}
+
+.producer-intro-more__content {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.9rem;
 }
 
 .producer-sections {
@@ -2103,7 +2150,7 @@ details p {
   }
 
   .producer-card__image-frame {
-    height: 230px;
+    height: auto;
     min-height: 0;
   }
 
@@ -2142,7 +2189,8 @@ details p {
 
   .producer-mobile-gallery__image {
     width: 100%;
-    height: 300px;
+    height: auto;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
     display: block;
   }
@@ -2157,8 +2205,12 @@ details p {
   }
 
   .producer-hero__image--primary {
-    height: 300px;
-    min-height: 300px;
+    height: auto;
+    min-height: 0;
+  }
+
+  .producer-diptych__primary .producer-hero__image--primary {
+    aspect-ratio: 4 / 3;
   }
 
   .producer-sections {
@@ -2289,7 +2341,7 @@ details p {
 
   .producer-card__image-frame {
     height: auto;
-    aspect-ratio: 1.65 / 1;
+    aspect-ratio: 4 / 3;
   }
 
   .producer-card__link {

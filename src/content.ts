@@ -1,3 +1,5 @@
+import { createImageUrlBuilder } from "@sanity/image-url";
+import type { SanityImageObject } from "@sanity/image-url";
 import type { SiteContent } from "./types";
 
 const sanityProjectId = import.meta.env.VITE_SANITY_PROJECT_ID;
@@ -5,7 +7,31 @@ const sanityDataset = import.meta.env.VITE_SANITY_DATASET;
 const sanityApiVersion =
   import.meta.env.VITE_SANITY_API_VERSION ?? "2026-09-01";
 const CONTENT_CACHE_TTL_MS = 2 * 60 * 1000;
-const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}`;
+const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:hotspot-v1`;
+const imageUrlBuilder =
+  sanityProjectId && sanityDataset
+    ? createImageUrlBuilder({
+        projectId: sanityProjectId,
+        dataset: sanityDataset,
+      })
+    : null;
+
+export function getSanityImageUrl(
+  image: SanityImageObject | undefined,
+  width: number,
+  height: number,
+): string | undefined {
+  if (!image?.asset || !imageUrlBuilder) {
+    return undefined;
+  }
+
+  return imageUrlBuilder
+    .image(image)
+    .width(width)
+    .height(height)
+    .auto("format")
+    .url();
+}
 
 type SiteSettingsQuery = Partial<SiteContent> & {
   producersIntro?: string;
@@ -110,9 +136,12 @@ const contentBundleQuery = encodeURIComponent(`{
     name,
     origin,
     "overviewImageUrl": overviewImage.asset->url,
+    "overviewImage": overviewImage{asset, crop, hotspot},
     "heroImageUrl": heroImage.asset->url,
+    "heroImage": heroImage{asset, crop, hotspot},
     imageCaption,
     "additionalImages": additionalImages[]{
+      "image": image{asset, crop, hotspot},
       "url": image.asset->url,
       caption
     },
