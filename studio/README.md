@@ -5,7 +5,7 @@ This folder contains the editorial interface for Vinberget.
 ## What this gives you
 
 - A separate CMS app where the owner can edit content without touching code.
-- Structured content types for the homepage, producers, restaurants, and price lists.
+- Structured content types for the homepage, producers, restaurants, and page content.
 - A clean path to hosting the studio at a dedicated URL.
 
 ## How to run it
@@ -22,11 +22,11 @@ This folder contains the editorial interface for Vinberget.
 - producer
 - restaurantPage
 - restaurant
-- restaurantPrice
 - privatePage
-- privatePrice
 - contactPage
 - siteSettings (legacy, retained until migration is complete)
+
+Wine prices are maintained in the linked Google Sheet and served through the Netlify price function.
 
 ## Migrate existing page content
 

@@ -39,28 +39,16 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 - city (string)
 - description (text)
 
-7. restaurantPrice
-- producer (string)
-- wine (string)
-- vintage (string)
-- bottle (string)
-- price (string)
-- notes (string)
+7. Prislistor
+- Hanteras i Google Sheet och hämtas via Netlify Function.
+- Restaurangpris och privatpris ligger i samma rad; tomt pris utesluter vinet ur den listan.
 
 8. privatePage
 - intro (text)
 - orderSteps (array av string)
 - priceListTitle (string)
 
-9. privatePrice
-- producer (string)
-- wine (string)
-- vintage (string)
-- bottle (string)
-- price (string)
-- notes (string)
-
-10. contactPage
+9. contactPage
 - email (string)
 - instagramUrl (url)
 - linkedinUrl (url)
@@ -69,7 +57,7 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 - newsletterCtaLabel (string)
 - newsletterEmbedUrl (url)
 
-11. siteSettings (legacy, migreras till sidodokumenten)
+10. siteSettings (legacy, migreras till sidodokumenten)
 - siteName (string)
 - tagline (string)
 - heroText (text)

@@ -1,5 +1,5 @@
 const spreadsheetId = "1NVyeqXCgH_TpI4uMBjDQlzK-3cQekkUWcBY9ghxFFhY";
-const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=0`;
+const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=0`;
 
 function parseCsv(text) {
   const rows = [];
@@ -119,8 +119,14 @@ export async function handler(event) {
   }
 
   try {
-    const response = await fetch(csvUrl, {
-      headers: { accept: "text/csv" },
+    const url = new URL(csvUrl);
+    url.searchParams.set("_", String(Date.now()));
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: {
+        accept: "text/csv",
+        "cache-control": "no-cache",
+      },
       signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) {

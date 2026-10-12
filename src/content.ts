@@ -96,8 +96,6 @@ type SanityContentBundle = {
   producerPage?: Pick<SiteContent, "producersTitle" | "producersIntro">;
   producers?: SiteContent["producers"];
   restaurants?: SiteContent["restaurants"]["partners"];
-  restaurantPrices?: SiteContent["restaurants"]["priceList"];
-  privatePrices?: SiteContent["privateCustomers"]["priceList"];
   privateInfo?: Partial<SiteContent["privateCustomers"]>;
 };
 
@@ -184,28 +182,6 @@ const contentBundleQuery = encodeURIComponent(`{
     city,
     description
   },
-  "restaurantPrices": *[_type == "restaurantPrice"]|order(producer asc, wine asc){
-    producer,
-    wine,
-    vintage,
-    wineColor,
-    bottle,
-    price,
-    isSoldOut,
-    isAllocated,
-    notes
-  },
-  "privatePrices": *[_type == "privatePrice"]|order(producer asc, wine asc){
-    producer,
-    wine,
-    vintage,
-    wineColor,
-    bottle,
-    price,
-    isSoldOut,
-    isAllocated,
-    notes
-  },
   "privateInfo": *[_type == "privatePage"][0]{
     intro,
     orderSteps,
@@ -288,8 +264,6 @@ export async function loadSiteContent(): Promise<SiteContent> {
     const site = bundle.site ?? {};
     const producers = bundle.producers ?? [];
     const restaurants = bundle.restaurants ?? [];
-    const restaurantPrices = bundle.restaurantPrices ?? [];
-    const privatePrices = bundle.privatePrices ?? [];
     const privateInfo = bundle.privateInfo ?? {};
 
     const mergedContent: SiteContent = {
@@ -318,15 +292,12 @@ export async function loadSiteContent(): Promise<SiteContent> {
           site.restaurantsIntro ??
           fallbackContent.restaurants.intro,
         partners: restaurants.length > 0 ? restaurants : [],
-        priceList:
-          sheetRestaurantPrices ??
-          (restaurantPrices.length > 0 ? restaurantPrices : []),
+        priceList: sheetRestaurantPrices ?? [],
       },
       privateCustomers: {
         ...fallbackContent.privateCustomers,
         ...privateInfo,
-        priceList:
-          sheetPrivatePrices ?? (privatePrices.length > 0 ? privatePrices : []),
+        priceList: sheetPrivatePrices ?? [],
       },
     };
 
