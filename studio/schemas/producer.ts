@@ -97,15 +97,6 @@ export const producer = {
       validation: (Rule) => Rule.required().min(20),
     },
     {
-      name: "wines",
-      title: "Äldre vintext",
-      type: "text",
-      rows: 6,
-      description:
-        "Äldre text visas tills du fyller i den formaterade presentationen nedan.",
-      validation: (Rule) => Rule.required().min(20),
-    },
-    {
       name: "winesFormatted",
       title: "Om vinerna",
       type: "array",
