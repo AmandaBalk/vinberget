@@ -32,16 +32,30 @@ const singletonTypes = new Set([
 
 const structure: StructureResolver = async (S, context) => {
   const client = context.getClient({ apiVersion: "2026-09-01" });
+  const fetchForStructure = async <T>(
+    query: string,
+    fallback: T,
+  ): Promise<T> => {
+    try {
+      return await client.fetch<T>(query);
+    } catch (error) {
+      console.error("Could not load dynamic Sanity structure items.", error);
+      return fallback;
+    }
+  };
   const [producerDocuments, restaurantPriceProducers, privatePriceProducers] =
     await Promise.all([
-      client.fetch<Array<{ name: string; origin?: string }>>(
+      fetchForStructure<Array<{ name: string; origin?: string }>>(
         '*[_type == "producer" && defined(name)]|order(name asc){name, origin}',
+        [],
       ),
-      client.fetch<string[]>(
+      fetchForStructure<string[]>(
         'array::unique(*[_type == "restaurantPrice" && defined(producer)].producer)',
+        [],
       ),
-      client.fetch<string[]>(
+      fetchForStructure<string[]>(
         'array::unique(*[_type == "privatePrice" && defined(producer)].producer)',
+        [],
       ),
     ]);
 
@@ -53,14 +67,26 @@ const structure: StructureResolver = async (S, context) => {
     const producerMap = new Map<string, { name: string; origin?: string }>();
 
     for (const producerDocument of producerDocuments) {
-      producerMap.set(
-        producerDocument.name.trim().toLocaleLowerCase("sv"),
-        producerDocument,
-      );
+      if (typeof producerDocument?.name !== "string") {
+        continue;
+      }
+
+      const name = producerDocument.name.trim();
+      if (!name) {
+        continue;
+      }
+
+      producerMap.set(name.toLocaleLowerCase("sv"), {
+        name,
+        ...(typeof producerDocument.origin === "string" &&
+        producerDocument.origin.trim()
+          ? { origin: producerDocument.origin.trim() }
+          : {}),
+      });
     }
 
     for (const producerName of priceListProducers) {
-      if (!producerName?.trim()) {
+      if (typeof producerName !== "string" || !producerName.trim()) {
         continue;
       }
 
@@ -70,9 +96,9 @@ const structure: StructureResolver = async (S, context) => {
       }
     }
 
-    return [...producerMap.values()]
+    const items = [...producerMap.values()]
       .sort((left, right) => left.name.localeCompare(right.name, "sv"))
-      .map((producerDocument) =>
+      .map((producerDocument, producerIndex) =>
         S.listItem()
           .title(
             producerDocument.origin
@@ -80,7 +106,7 @@ const structure: StructureResolver = async (S, context) => {
               : producerDocument.name,
           )
           .id(
-            `${schemaType}-${producerDocument.name
+            `${schemaType}-${producerIndex}-${producerDocument.name
               .toLocaleLowerCase("sv")
               .replace(/[^a-z0-9]+/g, "-")}`,
           )
@@ -98,6 +124,14 @@ const structure: StructureResolver = async (S, context) => {
               ]),
           ),
       );
+
+    return items.length > 0
+      ? items
+      : [
+          S.documentTypeListItem(schemaType)
+            .title("Alla prisrader")
+            .id(`${schemaType}-all`),
+        ];
   };
 
   return S.list()

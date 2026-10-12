@@ -7,7 +7,7 @@ const sanityDataset = import.meta.env.VITE_SANITY_DATASET;
 const sanityApiVersion =
   import.meta.env.VITE_SANITY_API_VERSION ?? "2026-09-01";
 const CONTENT_CACHE_TTL_MS = 2 * 60 * 1000;
-const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:hotspot-v1`;
+const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:content-v2`;
 const imageUrlBuilder =
   sanityProjectId && sanityDataset
     ? createImageUrlBuilder({
@@ -87,7 +87,11 @@ type SanityContentBundle = {
   restaurantsIntro?: string;
   restaurantPage?: Pick<
     SiteContent["restaurants"],
-    "pageTitle" | "contactPrompt" | "contactLinkLabel"
+    | "pageTitle"
+    | "contactPrompt"
+    | "contactLinkLabel"
+    | "priceListPdfUrl"
+    | "priceListPdfName"
   >;
   producerPage?: Pick<SiteContent, "producersTitle" | "producersIntro">;
   producers?: SiteContent["producers"];
@@ -123,7 +127,11 @@ const contentBundleQuery = encodeURIComponent(`{
   "restaurantPage": {
     "pageTitle": coalesce(*[_type == "restaurantPage"][0].pageTitle, "För restaurangkunder"),
     "contactPrompt": coalesce(*[_type == "restaurantPage"][0].contactPrompt, "För beställning av viner,"),
-    "contactLinkLabel": coalesce(*[_type == "restaurantPage"][0].contactLinkLabel, "kontakta oss")
+    "contactLinkLabel": coalesce(*[_type == "restaurantPage"][0].contactLinkLabel, "kontakta oss"),
+    "priceListPdfUrl": *[_type == "restaurantPage"][0].priceListPdf.asset->url,
+    "priceListPdfName": *[_type == "restaurantPage"][0].priceListPdf.asset->originalFilename,
+    "priceListPdfUrl": *[_type == "restaurantPage"][0].priceListPdf.asset->url,
+    "priceListPdfName": *[_type == "restaurantPage"][0].priceListPdf.asset->originalFilename
   },
   "producerPage": {
     "producersTitle": coalesce(*[_type == "producerPage"][0].pageTitle, "Vinproducenter"),
@@ -148,7 +156,8 @@ const contentBundleQuery = encodeURIComponent(`{
     intro,
     vineyard,
     cellar,
-    wines
+    wines,
+    winesFormatted
   },
   "restaurants": *[_type == "restaurant"]|order(name asc){
     name,

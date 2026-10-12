@@ -1,10 +1,12 @@
 import type { SanityImageObject } from "@sanity/image-url";
+import type { PortableTextBlock } from "@portabletext/types";
 
 export type PageId =
   | "hem"
   | "om-oss"
   | "vinproducenter"
   | "restauranger"
+  | "restaurangkund"
   | "privatkund";
 
 export interface Producer {
@@ -25,6 +27,7 @@ export interface Producer {
   vineyard: string;
   cellar: string;
   wines: string;
+  winesFormatted?: PortableTextBlock[];
 }
 
 export interface Restaurant {
@@ -68,6 +71,8 @@ export interface SiteContent {
     pageTitle: string;
     contactPrompt: string;
     contactLinkLabel: string;
+    priceListPdfUrl?: string;
+    priceListPdfName?: string;
     priceIntro: string;
     intro: string;
     partnersTitle: string;

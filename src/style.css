@@ -1053,7 +1053,7 @@ th,
   content: "-";
 }
 
-.producer-accordion p {
+.producer-accordion__body {
   padding: 0 0 1.35rem;
   max-width: 68ch;
   opacity: 0;
@@ -1061,7 +1061,22 @@ th,
   transition: opacity 180ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.producer-accordion[open] p {
+.producer-accordion__body > * + * {
+  margin-top: 0.75rem;
+}
+
+.producer-accordion__body h2,
+.producer-accordion__body h3 {
+  margin: 1.2rem 0 0.35rem;
+  font-size: 1.3rem;
+}
+
+.producer-accordion__body ul,
+.producer-accordion__body ol {
+  padding-left: 1.3rem;
+}
+
+.producer-accordion[open] .producer-accordion__body {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1138,6 +1153,10 @@ th,
   max-width: 58ch;
   font-size: 1.12rem;
   line-height: 1.68;
+}
+
+.restaurant-price-pdf {
+  margin-top: 0.85rem;
 }
 
 .restaurant-price-heading h2 {

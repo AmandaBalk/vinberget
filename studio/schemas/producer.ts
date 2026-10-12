@@ -98,10 +98,39 @@ export const producer = {
     },
     {
       name: "wines",
-      title: "Om vinerna",
+      title: "Äldre vintext",
       type: "text",
       rows: 6,
+      description:
+        "Äldre text visas tills du fyller i den formaterade presentationen nedan.",
       validation: (Rule) => Rule.required().min(20),
+    },
+    {
+      name: "winesFormatted",
+      title: "Om vinerna",
+      type: "array",
+      description:
+        "Skriv en rubrik per vin. Använd rubriknivåer, fetstil och punktlistor för druvor och smaknoter.",
+      of: [
+        {
+          type: "block",
+          styles: [
+            { title: "Brödtext", value: "normal" },
+            { title: "Rubrik", value: "h2" },
+            { title: "Underrubrik", value: "h3" },
+          ],
+          lists: [
+            { title: "Punktlista", value: "bullet" },
+            { title: "Numrerad lista", value: "number" },
+          ],
+          marks: {
+            decorators: [
+              { title: "Fet", value: "strong" },
+              { title: "Kursiv", value: "em" },
+            ],
+          },
+        },
+      ],
     },
   ],
 };

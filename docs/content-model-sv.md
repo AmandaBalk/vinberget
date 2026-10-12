@@ -27,11 +27,12 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 - intro (text)
 - vineyard (text)
 - cellar (text)
-- wines (text)
+- winesFormatted (Portable Text: rubriker, fet/kursiv text och listor; gammal wines-text visas som reserv)
 
 5. restaurantPage
 - priceIntro (text)
 - intro (text)
+- priceListPdf (file, frivillig PDF-nedladdning)
 
 6. restaurant
 - name (string)
@@ -93,7 +94,8 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 - /#/om-oss
 - /#/vinproducenter
 - /#/vinproducenter/:slug
-- /#/restauranger
+- /#/restauranger (Våra restauranger, sortering efter namn/ort)
+- /#/restaurangkund (restaurangprislista och PDF)
 - /#/privatkund
 
 ## Krav som redan ar implementerade

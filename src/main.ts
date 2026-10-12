@@ -1,4 +1,6 @@
 import "./style.css";
+import { toHTML } from "@portabletext/to-html";
+import type { PortableTextBlock } from "@portabletext/types";
 import heroImg from "./assets/hero.png";
 import brandLogoImg from "./assets/Logga_vinberget_mellan_transparent.png";
 import { getSanityImageUrl, loadSiteContent } from "./content";
@@ -8,6 +10,7 @@ interface Route {
   page: PageId;
   producerSlug?: string;
   producerSort?: "name" | "origin";
+  restaurantSort?: "name" | "city";
 }
 
 const appElement = document.querySelector<HTMLDivElement>("#app");
@@ -20,7 +23,12 @@ const navItems: Array<{ id: PageId; label: string; path: string }> = [
   { id: "hem", label: "Hem", path: "/hem" },
   { id: "om-oss", label: "Om oss", path: "/om-oss" },
   { id: "vinproducenter", label: "Våra producenter", path: "/vinproducenter" },
-  { id: "restauranger", label: "Restaurangkund", path: "/restauranger" },
+  { id: "restauranger", label: "Våra restauranger", path: "/restauranger" },
+  {
+    id: "restaurangkund",
+    label: "Restaurangkund",
+    path: "/restaurangkund",
+  },
   { id: "privatkund", label: "Privatkund", path: "/privatkund" },
 ];
 
@@ -69,6 +77,17 @@ function splitProducerIntroIntoParagraphs(value: string): string[] {
   });
 }
 
+function renderProducerWineContent(
+  legacyText: string,
+  formattedText?: PortableTextBlock[],
+): string {
+  if (formattedText?.length) {
+    return toHTML(formattedText, { onMissingComponent: false });
+  }
+
+  return `<p>${escapeHtml(legacyText).replace(/\r?\n/g, "<br />")}</p>`;
+}
+
 function safeUrl(value: string | undefined, fallback: string): string {
   if (!value) {
     return fallback;
@@ -114,6 +133,7 @@ function routeFromLocation(pathname: string, search: string): Route {
   const parts = normalized.split("/").filter(Boolean);
   const query = new URLSearchParams(search);
   const producerSort = query.get("sort") === "origin" ? "origin" : "name";
+  const restaurantSort = query.get("sort") === "city" ? "city" : "name";
 
   if (parts[0] === "vinproducenter" && parts[1]) {
     return { page: "vinproducenter", producerSlug: decodePathPart(parts[1]) };
@@ -124,10 +144,15 @@ function routeFromLocation(pathname: string, search: string): Route {
     case "om-oss":
     case "vinproducenter":
     case "restauranger":
+    case "restaurangkund":
     case "privatkund":
-      return parts[0] === "vinproducenter"
-        ? { page: parts[0], producerSort }
-        : { page: parts[0] };
+      if (parts[0] === "vinproducenter") {
+        return { page: parts[0], producerSort };
+      }
+      if (parts[0] === "restauranger") {
+        return { page: parts[0], restaurantSort };
+      }
+      return { page: parts[0] };
     default:
       return { page: "hem" };
   }
@@ -140,6 +165,7 @@ function updateMeta(route: Route, content: SiteContent): void {
     "om-oss": `Om oss | ${baseTitle}`,
     vinproducenter: `Vinproducenter | ${baseTitle}`,
     restauranger: `Restauranger | ${baseTitle}`,
+    restaurangkund: `Restaurangkund | ${baseTitle}`,
     privatkund: `Privatkund | ${baseTitle}`,
   };
 
@@ -167,7 +193,11 @@ function updateMeta(route: Route, content: SiteContent): void {
   }
 
   if (route.page === "restauranger") {
-    description = content.restaurants.intro;
+    description = "Hitta restauranger som serverar viner från Vinberget.";
+  }
+
+  if (route.page === "restaurangkund") {
+    description = content.restaurants.priceIntro;
   }
 
   if (route.page === "privatkund") {
@@ -928,22 +958,33 @@ function renderProducerPage(producer: Producer): string {
         </details>
         <details class="producer-accordion">
           <summary>Om vinerna</summary>
-          <p>${escapeHtml(producer.wines)}</p>
+          <div class="producer-accordion__body">${renderProducerWineContent(producer.wines, producer.winesFormatted)}</div>
         </details>
       </div>
     </section>
   `;
 }
 
-function renderRestaurants(content: SiteContent): string {
-  const initialVisible = 10;
-  const step = 10;
-  const hasShowMore = content.restaurants.partners.length > initialVisible;
+function renderRestaurants(
+  content: SiteContent,
+  sort: "name" | "city",
+): string {
+  const restaurants = [...content.restaurants.partners]
+    .sort((left, right) => {
+      if (sort === "city") {
+        const byCity = (left.city ?? "").localeCompare(right.city ?? "", "sv");
+        if (byCity !== 0) {
+          return byCity;
+        }
+      }
 
-  const restaurants = content.restaurants.partners
+      return left.name.localeCompare(right.name, "sv", {
+        sensitivity: "base",
+      });
+    })
     .map(
-      (partner, index) => `
-      <li class="restaurant-list__item" ${hasShowMore && index >= initialVisible ? "hidden" : ""}>
+      (partner) => `
+      <li class="restaurant-list__item">
         <h3 class="restaurant-entry__name">${escapeHtml(partner.name)}${
           partner.city
             ? ` <span class="restaurant-entry__city">${escapeHtml(partner.city)}</span>`
@@ -955,17 +996,30 @@ function renderRestaurants(content: SiteContent): string {
     )
     .join("");
 
-  const partnerContent =
+  const restaurantContent =
     content.restaurants.partners.length > 0
-      ? `
-          <ul class="restaurant-list${hasShowMore ? " restaurant-list--has-fade" : ""}" data-visible-count="${initialVisible}" data-step="${step}">${restaurants}</ul>
-          ${
-            content.restaurants.partners.length > initialVisible
-              ? `<button type="button" class="secondary-button restaurant-list__more" data-show-more-restaurants data-step="${step}">Visa fler</button>`
-              : ""
-          }
-        `
-      : '<p class="empty-state">Restaurangkunder publiceras inom kort.</p>';
+      ? `<ul class="restaurant-list">${restaurants}</ul>`
+      : '<p class="empty-state">Restauranger publiceras inom kort.</p>';
+
+  return `
+    <section class="content-card content-card--wide reveal restaurants-page">
+      <header class="restaurants-page__intro">
+        <p class="eyebrow">Vinberget vinhandel</p>
+        <h1>Våra restauranger</h1>
+        ${content.restaurants.intro ? `<p class="restaurants-page__lead">${escapeHtml(content.restaurants.intro)}</p>` : ""}
+      </header>
+      <div class="producer-toolbar" aria-label="Sortera restauranger">
+        <span class="producer-toolbar__label">Sortera efter</span>
+        <a class="sort-link${sort === "name" ? " active" : ""}" href="/restauranger"${sort === "name" ? ' aria-current="true"' : ""}>Namn</a>
+        <a class="sort-link${sort === "city" ? " active" : ""}" href="/restauranger?sort=city"${sort === "city" ? ' aria-current="true"' : ""}>Ort</a>
+      </div>
+      ${restaurantContent}
+    </section>
+  `;
+}
+
+function renderRestaurantCustomers(content: SiteContent): string {
+  const pdfUrl = safeUrl(content.restaurants.priceListPdfUrl, "");
 
   return `
     <section class="content-card content-card--wide reveal restaurants-page">
@@ -973,6 +1027,7 @@ function renderRestaurants(content: SiteContent): string {
         <p class="eyebrow">Vinberget vinhandel</p>
         <h1>${escapeHtml(content.restaurants.pageTitle)}</h1>
         <p class="restaurants-page__lead">${escapeHtml(content.restaurants.priceIntro)}</p>
+        ${pdfUrl ? `<p class="restaurant-price-pdf"><a class="text-link" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noreferrer" title="${escapeHtml(content.restaurants.priceListPdfName ?? "Prislista som PDF")}">Ladda ner prislistan som PDF</a></p>` : ""}
         <p class="restaurant-price-contact">${escapeHtml(content.restaurants.contactPrompt)} <a href="#kontakt" class="inline-anchor" data-scroll-to-contact>${escapeHtml(content.restaurants.contactLinkLabel)}</a>.</p>
       </header>
       <section class="restaurants-page__section" aria-labelledby="restaurang-prislista">
@@ -980,11 +1035,6 @@ function renderRestaurants(content: SiteContent): string {
           <h2 id="restaurang-prislista">Prislista</h2>
         </header>
         ${renderProducerPriceList(content.restaurants.priceList, content.producers)}
-      </section>
-      <section class="restaurants-page__section restaurants-page__partners" aria-labelledby="restaurang-kunder">
-        <h2 id="restaurang-kunder">${escapeHtml(content.restaurants.partnersTitle)}</h2>
-        <p class="restaurant-customers-intro">${escapeHtml(content.restaurants.intro)}</p>
-        ${partnerContent}
       </section>
     </section>
   `;
@@ -1056,7 +1106,11 @@ function renderPage(route: Route, content: SiteContent): string {
   }
 
   if (route.page === "restauranger") {
-    return renderRestaurants(content);
+    return renderRestaurants(content, route.restaurantSort ?? "name");
+  }
+
+  if (route.page === "restaurangkund") {
+    return renderRestaurantCustomers(content);
   }
 
   return renderPrivateCustomers(content);
@@ -1117,7 +1171,6 @@ function renderApp(content: SiteContent): void {
 
   enableMobileNav();
   enablePriceListShowMore();
-  enableRestaurantShowMore();
   enableSingleOpenProducerAccordion();
   enableContactAnchorScroll();
 }
@@ -1262,41 +1315,6 @@ function showAgeGate(content?: SiteContent): boolean {
 
   document.body.append(gate);
   return true;
-}
-
-function enableRestaurantShowMore(): void {
-  const button = document.querySelector<HTMLButtonElement>(
-    "[data-show-more-restaurants]",
-  );
-  const list = document.querySelector<HTMLUListElement>(".restaurant-list");
-
-  if (!button || !list) {
-    return;
-  }
-
-  const step = Number(button.dataset.step ?? "10");
-  const items = Array.from(
-    list.querySelectorAll<HTMLLIElement>(".restaurant-list__item"),
-  );
-  let visibleCount = Number(list.dataset.visibleCount ?? "10");
-
-  const applyState = () => {
-    const isComplete = visibleCount >= items.length;
-    items.forEach((item, index) => {
-      item.hidden = index >= visibleCount;
-    });
-
-    button.hidden = isComplete;
-    button.disabled = isComplete;
-    list.classList.toggle("restaurant-list--has-fade", !isComplete);
-  };
-
-  applyState();
-
-  button.addEventListener("click", () => {
-    visibleCount = Math.min(visibleCount + step, items.length);
-    applyState();
-  });
 }
 
 function isInternalNavigableLink(anchor: HTMLAnchorElement): boolean {
