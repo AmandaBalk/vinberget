@@ -32,7 +32,7 @@ Detta dokument matchar implementationen i frontend och ar underlag for Sanity-sc
 5. restaurantPage
 - priceIntro (text)
 - intro (text)
-- priceListPdf (file, frivillig PDF-nedladdning)
+- Restaurangpris-PDF genereras vid nedladdning från aktuella rader i Google Sheet
 
 6. restaurant
 - name (string)

@@ -87,11 +87,7 @@ type SanityContentBundle = {
   restaurantsIntro?: string;
   restaurantPage?: Pick<
     SiteContent["restaurants"],
-    | "pageTitle"
-    | "contactPrompt"
-    | "contactLinkLabel"
-    | "priceListPdfUrl"
-    | "priceListPdfName"
+    "pageTitle" | "contactPrompt" | "contactLinkLabel"
   >;
   producerPage?: Pick<SiteContent, "producersTitle" | "producersIntro">;
   producers?: SiteContent["producers"];
@@ -99,12 +95,13 @@ type SanityContentBundle = {
   privateInfo?: Partial<SiteContent["privateCustomers"]>;
 };
 
-async function fetchSheetPrices(
+export async function fetchSheetPrices(
   audience: "restaurant" | "private",
 ): Promise<SiteContent["restaurants"]["priceList"] | null> {
   try {
     const response = await fetch(
-      `/.netlify/functions/prices?audience=${audience}`,
+      `/.netlify/functions/prices?audience=${audience}&_=${Date.now()}`,
+      { cache: "no-store" },
     );
     if (!response.ok) {
       return null;
@@ -146,10 +143,6 @@ const contentBundleQuery = encodeURIComponent(`{
     "pageTitle": coalesce(*[_type == "restaurantPage"][0].pageTitle, "För restaurangkunder"),
     "contactPrompt": coalesce(*[_type == "restaurantPage"][0].contactPrompt, "För beställning av viner,"),
     "contactLinkLabel": coalesce(*[_type == "restaurantPage"][0].contactLinkLabel, "kontakta oss"),
-    "priceListPdfUrl": *[_type == "restaurantPage"][0].priceListPdf.asset->url,
-    "priceListPdfName": *[_type == "restaurantPage"][0].priceListPdf.asset->originalFilename,
-    "priceListPdfUrl": *[_type == "restaurantPage"][0].priceListPdf.asset->url,
-    "priceListPdfName": *[_type == "restaurantPage"][0].priceListPdf.asset->originalFilename
   },
   "producerPage": {
     "producersTitle": coalesce(*[_type == "producerPage"][0].pageTitle, "Vinproducenter"),
@@ -247,10 +240,6 @@ function writeCachedContent(content: SiteContent): void {
 
 export async function loadSiteContent(): Promise<SiteContent> {
   const cachedContent = readCachedContent();
-  if (cachedContent) {
-    return cachedContent;
-  }
-
   const [sheetRestaurantPrices, sheetPrivatePrices] = await Promise.all([
     fetchSheetPrices("restaurant"),
     fetchSheetPrices("private"),
@@ -266,6 +255,12 @@ export async function loadSiteContent(): Promise<SiteContent> {
       priceList: sheetPrivatePrices ?? [],
     },
   });
+
+  if (cachedContent) {
+    const content = addSheetPrices(cachedContent);
+    writeCachedContent(content);
+    return content;
+  }
 
   if (!hasSanityConfig()) {
     const content = addSheetPrices(fallbackContent);

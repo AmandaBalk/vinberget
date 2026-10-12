@@ -4,6 +4,7 @@ import type { PortableTextBlock } from "@portabletext/types";
 import heroImg from "./assets/hero.png";
 import brandLogoImg from "./assets/Logga_vinberget_mellan_transparent.png";
 import { getSanityImageUrl, loadSiteContent } from "./content";
+import { downloadRestaurantPricePdf } from "./restaurantPricePdf";
 import type { PageId, PriceRow, Producer, SiteContent } from "./types";
 
 interface Route {
@@ -51,6 +52,20 @@ function escapeHtml(value: string): string {
 
 function renderSanityText(value: string): string {
   return escapeHtml(value).replace(/\r\n|\r|\n/g, "<br>");
+}
+
+function renderRestaurantPriceIntro(
+  value: string,
+  canDownload: boolean,
+): string {
+  const escaped = escapeHtml(value);
+  const linked = canDownload
+    ? escaped.replace(
+        /\bhär(?=[.!?]?\s*$)/iu,
+        '<a href="#ladda-ner-prislista" class="inline-anchor" data-download-restaurant-price-pdf>här</a>',
+      )
+    : escaped;
+  return linked.replace(/\r\n|\r|\n/g, "<br>");
 }
 
 function splitProducerIntroIntoParagraphs(value: string): string[] {
@@ -461,11 +476,13 @@ function linkifySystembolagetText(value: string): string {
   const systembolagetHref = "https://www.systembolaget.se";
   const systembolagetText = "systembolaget.se";
 
-  return escaped.replace(
-    systembolagetPattern,
-    () =>
-      `<a href="${systembolagetHref}" class="inline-anchor" target="_blank" rel="noreferrer">${systembolagetText}</a>`,
-  ).replace(/\r\n|\r|\n/g, "<br>");
+  return escaped
+    .replace(
+      systembolagetPattern,
+      () =>
+        `<a href="${systembolagetHref}" class="inline-anchor" target="_blank" rel="noreferrer">${systembolagetText}</a>`,
+    )
+    .replace(/\r\n|\r|\n/g, "<br>");
 }
 
 type MailchimpJsonpResponse = {
@@ -1023,15 +1040,12 @@ function renderRestaurants(
 }
 
 function renderRestaurantCustomers(content: SiteContent): string {
-  const pdfUrl = safeUrl(content.restaurants.priceListPdfUrl, "");
-
   return `
     <section class="content-card content-card--wide reveal restaurants-page">
       <header class="restaurants-page__intro">
         <p class="eyebrow">Vinberget vinhandel</p>
         <h1>${escapeHtml(content.restaurants.pageTitle)}</h1>
-        <p class="restaurants-page__lead">${renderSanityText(content.restaurants.priceIntro)}</p>
-        ${pdfUrl ? `<p class="restaurant-price-pdf"><a class="text-link" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noreferrer" title="${escapeHtml(content.restaurants.priceListPdfName ?? "Prislista som PDF")}">Ladda ner prislistan som PDF</a></p>` : ""}
+        <p class="restaurants-page__lead">${renderRestaurantPriceIntro(content.restaurants.priceIntro, content.restaurants.priceList.length > 0)}</p>
         <p class="restaurant-price-contact">${escapeHtml(content.restaurants.contactPrompt)} <a href="#kontakt" class="inline-anchor" data-scroll-to-contact>${escapeHtml(content.restaurants.contactLinkLabel)}</a>.</p>
       </header>
       <section class="restaurants-page__section" aria-labelledby="restaurang-prislista">
@@ -1175,6 +1189,7 @@ function renderApp(content: SiteContent): void {
 
   enableMobileNav();
   enablePriceListShowMore();
+  enableRestaurantPricePdf(content);
   enableSingleOpenProducerAccordion();
   enableContactAnchorScroll();
 }
@@ -1262,6 +1277,23 @@ function enablePriceListShowMore(): void {
         applyState();
       });
     });
+}
+
+function enableRestaurantPricePdf(content: SiteContent): void {
+  const link = document.querySelector<HTMLAnchorElement>(
+    "[data-download-restaurant-price-pdf]",
+  );
+  if (!link || content.restaurants.priceList.length === 0) {
+    return;
+  }
+
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    downloadRestaurantPricePdf(
+      content.restaurants.priceList,
+      content.producers,
+    );
+  });
 }
 
 function lockForUnderage(): void {

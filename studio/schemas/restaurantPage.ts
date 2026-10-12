@@ -29,13 +29,6 @@ export const restaurantPage = {
       validation: (Rule) => Rule.required().min(2).max(40),
     },
     {
-      name: "priceListPdf",
-      title: "Prislista som PDF",
-      type: "file",
-      description: "Valfri PDF som visas som nedladdningslänk på sidan.",
-      options: { accept: "application/pdf" },
-    },
-    {
       name: "priceIntro",
       title: "Text ovanför prislistan",
       type: "text",

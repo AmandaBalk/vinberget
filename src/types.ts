@@ -71,8 +71,6 @@ export interface SiteContent {
     pageTitle: string;
     contactPrompt: string;
     contactLinkLabel: string;
-    priceListPdfUrl?: string;
-    priceListPdfName?: string;
     priceIntro: string;
     intro: string;
     partnersTitle: string;
