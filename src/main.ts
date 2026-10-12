@@ -49,13 +49,17 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function renderSanityText(value: string): string {
+  return escapeHtml(value).replace(/\r\n|\r|\n/g, "<br>");
+}
+
 function splitProducerIntroIntoParagraphs(value: string): string[] {
   const sentenceSegmenter = new Intl.Segmenter("sv", {
     granularity: "sentence",
   });
   const textBlocks = value
     .trim()
-    .split(/\n\s*\n/)
+    .split(/\r\n|\r|\n/)
     .map((block) => block.trim())
     .filter(Boolean);
 
@@ -85,7 +89,7 @@ function renderProducerWineContent(
     return toHTML(formattedText, { onMissingComponent: false });
   }
 
-  return `<p>${escapeHtml(legacyText).replace(/\r?\n/g, "<br />")}</p>`;
+  return `<p>${renderSanityText(legacyText)}</p>`;
 }
 
 function safeUrl(value: string | undefined, fallback: string): string {
@@ -280,7 +284,7 @@ function renderPriceTable(
         ${showProducer ? `<td class="price-table__producer"><span class="price-cell-text">${escapeHtml(row.producer)}</span></td>` : ""}
         <td class="price-table__bottle"><span class="price-cell-text">${escapeHtml(formatBottleSize(row.bottle))}</span></td>
         <td class="price-table__price"><span class="price-cell-text">${escapeHtml(priceLabel(row))}</span></td>
-        <td class="price-table__notes"><span class="price-cell-text">${row.notes ? escapeHtml(row.notes) : ""}</span></td>
+        <td class="price-table__notes"><span class="price-cell-text">${row.notes ? renderSanityText(row.notes) : ""}</span></td>
       </tr>
     `;
     })
@@ -304,7 +308,7 @@ function renderPriceTable(
           <p class="price-item__price">${escapeHtml(priceLabel(row))}</p>
         </div>
         <p class="price-item__meta">${escapeHtml(metaParts.join(" • "))}</p>
-        ${row.notes ? `<p class="price-item__notes">${escapeHtml(row.notes)}</p>` : ""}
+        ${row.notes ? `<p class="price-item__notes">${renderSanityText(row.notes)}</p>` : ""}
       </li>
     `;
     })
@@ -461,7 +465,7 @@ function linkifySystembolagetText(value: string): string {
     systembolagetPattern,
     () =>
       `<a href="${systembolagetHref}" class="inline-anchor" target="_blank" rel="noreferrer">${systembolagetText}</a>`,
-  );
+  ).replace(/\r\n|\r|\n/g, "<br>");
 }
 
 type MailchimpJsonpResponse = {
@@ -567,7 +571,7 @@ function renderHome(content: SiteContent): string {
       ${content.homeImageUrl ? `<img class="home-hero-image" src="${safeUrl(content.homeImageUrl, "")}" alt="${escapeHtml(content.siteName)}" />` : ""}
       <div class="home-hero-main">
         <h1>${escapeHtml(content.tagline)}</h1>
-        <p class="lead">${escapeHtml(content.heroText)}</p>
+        <p class="lead">${renderSanityText(content.heroText)}</p>
       </div>
     </section>
     ${featuredProducerMarkup}
@@ -621,7 +625,7 @@ function showNewsletterPopup(content: SiteContent): void {
   popup.innerHTML = `
     <button type="button" class="newsletter-popup__close" aria-label="Stäng" data-newsletter="close">X</button>
     <h3>${escapeHtml(content.newsletter.title)}</h3>
-    <p>${escapeHtml(content.newsletter.text)}</p>
+    <p>${renderSanityText(content.newsletter.text)}</p>
     ${newsletterForm}
     <p class="newsletter-popup__status" aria-live="polite" hidden></p>
   `;
@@ -752,7 +756,7 @@ function renderAbout(content: SiteContent): string {
         <div class="producer-hero__panel">
           <p class="eyebrow">Om oss</p>
           <h1>${escapeHtml(content.about.title)}</h1>
-          <p>${escapeHtml(content.about.body)}</p>
+          <p>${renderSanityText(content.about.body)}</p>
         </div>
       </div>
     </section>
@@ -817,7 +821,7 @@ function renderProducerList(
   return `
     <section class="content-card reveal producer-overview">
       <h1>${escapeHtml(content.producersTitle)}</h1>
-      <p class="lead-small">${escapeHtml(content.producersIntro || "Välj en producent för att läsa mer om vingård, källare och viner.")}</p>
+      <p class="lead-small">${renderSanityText(content.producersIntro || "Välj en producent för att läsa mer om vingård, källare och viner.")}</p>
       <div class="producer-toolbar" aria-label="Sortera producenter">
         <span class="producer-toolbar__label">Sortera efter</span>
         <a class="sort-link${producerSort === "name" ? " active" : ""}" href="/vinproducenter"${producerSort === "name" ? ' aria-current="true"' : ""}>Namn</a>
@@ -842,7 +846,7 @@ function renderProducerPage(producer: Producer): string {
     paragraphs
       .map(
         (paragraph) =>
-          `<p class="producer-hero__intro-paragraph">${escapeHtml(paragraph)}</p>`,
+          `<p class="producer-hero__intro-paragraph">${renderSanityText(paragraph)}</p>`,
       )
       .join("");
   const additionalImages = (producer.additionalImages ?? []).filter((item) =>
@@ -950,11 +954,11 @@ function renderProducerPage(producer: Producer): string {
       <div class="producer-sections producer-sections--accordion">
         <details class="producer-accordion">
           <summary>I vingården</summary>
-          <p>${escapeHtml(producer.vineyard)}</p>
+          <p>${renderSanityText(producer.vineyard)}</p>
         </details>
         <details class="producer-accordion">
           <summary>I källaren</summary>
-          <p>${escapeHtml(producer.cellar)}</p>
+          <p>${renderSanityText(producer.cellar)}</p>
         </details>
         <details class="producer-accordion">
           <summary>Om vinerna</summary>
@@ -990,7 +994,7 @@ function renderRestaurants(
             ? ` <span class="restaurant-entry__city">${escapeHtml(partner.city)}</span>`
             : ""
         }</h3>
-        <p class="restaurant-entry__description">${escapeHtml(partner.description)}</p>
+        <p class="restaurant-entry__description">${renderSanityText(partner.description)}</p>
       </li>
     `,
     )
@@ -1006,7 +1010,7 @@ function renderRestaurants(
       <header class="restaurants-page__intro">
         <p class="eyebrow">Vinberget vinhandel</p>
         <h1>Våra restauranger</h1>
-        ${content.restaurants.intro ? `<p class="restaurants-page__lead">${escapeHtml(content.restaurants.intro)}</p>` : ""}
+        ${content.restaurants.intro ? `<p class="restaurants-page__lead">${renderSanityText(content.restaurants.intro)}</p>` : ""}
       </header>
       <div class="producer-toolbar" aria-label="Sortera restauranger">
         <span class="producer-toolbar__label">Sortera efter</span>
@@ -1026,7 +1030,7 @@ function renderRestaurantCustomers(content: SiteContent): string {
       <header class="restaurants-page__intro">
         <p class="eyebrow">Vinberget vinhandel</p>
         <h1>${escapeHtml(content.restaurants.pageTitle)}</h1>
-        <p class="restaurants-page__lead">${escapeHtml(content.restaurants.priceIntro)}</p>
+        <p class="restaurants-page__lead">${renderSanityText(content.restaurants.priceIntro)}</p>
         ${pdfUrl ? `<p class="restaurant-price-pdf"><a class="text-link" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noreferrer" title="${escapeHtml(content.restaurants.priceListPdfName ?? "Prislista som PDF")}">Ladda ner prislistan som PDF</a></p>` : ""}
         <p class="restaurant-price-contact">${escapeHtml(content.restaurants.contactPrompt)} <a href="#kontakt" class="inline-anchor" data-scroll-to-contact>${escapeHtml(content.restaurants.contactLinkLabel)}</a>.</p>
       </header>
