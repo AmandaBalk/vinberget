@@ -101,7 +101,7 @@ export const producer = {
       title: "Om vinerna",
       type: "array",
       description:
-        "Skriv en rubrik per vin. Använd rubriknivåer, fetstil och punktlistor för druvor och smaknoter.",
+        "Formatera texten fritt med rubriker, stycken, listor och textmarkeringar.",
       of: [
         {
           type: "block",
