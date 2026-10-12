@@ -7,7 +7,7 @@ const sanityDataset = import.meta.env.VITE_SANITY_DATASET;
 const sanityApiVersion =
   import.meta.env.VITE_SANITY_API_VERSION ?? "2026-09-01";
 const CONTENT_CACHE_TTL_MS = 2 * 60 * 1000;
-const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:content-v2`;
+const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:content-v3-sheet`;
 const imageUrlBuilder =
   sanityProjectId && sanityDataset
     ? createImageUrlBuilder({
@@ -100,6 +100,26 @@ type SanityContentBundle = {
   privatePrices?: SiteContent["privateCustomers"]["priceList"];
   privateInfo?: Partial<SiteContent["privateCustomers"]>;
 };
+
+async function fetchSheetPrices(
+  audience: "restaurant" | "private",
+): Promise<SiteContent["restaurants"]["priceList"] | null> {
+  try {
+    const response = await fetch(
+      `/.netlify/functions/prices?audience=${audience}`,
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as {
+      prices?: SiteContent["restaurants"]["priceList"];
+    };
+    return Array.isArray(payload.prices) ? payload.prices : null;
+  } catch {
+    return null;
+  }
+}
 
 const contentBundleQuery = encodeURIComponent(`{
   "site": {
@@ -261,6 +281,10 @@ export async function loadSiteContent(): Promise<SiteContent> {
 
   try {
     const bundle = await sanityFetch<SanityContentBundle>(contentBundleQuery);
+    const [sheetRestaurantPrices, sheetPrivatePrices] = await Promise.all([
+      fetchSheetPrices("restaurant"),
+      fetchSheetPrices("private"),
+    ]);
     const site = bundle.site ?? {};
     const producers = bundle.producers ?? [];
     const restaurants = bundle.restaurants ?? [];
@@ -294,12 +318,15 @@ export async function loadSiteContent(): Promise<SiteContent> {
           site.restaurantsIntro ??
           fallbackContent.restaurants.intro,
         partners: restaurants.length > 0 ? restaurants : [],
-        priceList: restaurantPrices.length > 0 ? restaurantPrices : [],
+        priceList:
+          sheetRestaurantPrices ??
+          (restaurantPrices.length > 0 ? restaurantPrices : []),
       },
       privateCustomers: {
         ...fallbackContent.privateCustomers,
         ...privateInfo,
-        priceList: privatePrices.length > 0 ? privatePrices : [],
+        priceList:
+          sheetPrivatePrices ?? (privatePrices.length > 0 ? privatePrices : []),
       },
     };
 
