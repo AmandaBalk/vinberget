@@ -6,31 +6,33 @@ export default defineConfig({
     {
       name: "local-netlify-prices-function",
       configureServer(server) {
-        server.middlewares.use(
-          "/.netlify/functions/prices",
-          async (request, response, next) => {
-            if (request.method !== "GET") {
-              next();
-              return;
-            }
+        const priceFunctionMiddleware = async (request, response, next) => {
+          const requestUrl = new URL(request.url ?? "/", "http://localhost");
+          if (
+            request.method !== "GET" ||
+            requestUrl.pathname !== "/.netlify/functions/prices"
+          ) {
+            next();
+            return;
+          }
 
-            const requestUrl = new URL(
-              request.url ?? "/",
-              "http://localhost",
-            );
-            const result = await handler({
-              queryStringParameters: Object.fromEntries(
-                requestUrl.searchParams,
-              ),
-            });
+          const result = await handler({
+            queryStringParameters: Object.fromEntries(
+              requestUrl.searchParams,
+            ),
+          });
 
-            response.statusCode = result.statusCode;
-            for (const [name, value] of Object.entries(result.headers ?? {})) {
-              response.setHeader(name, value);
-            }
-            response.end(result.body);
-          },
-        );
+          response.statusCode = result.statusCode;
+          for (const [name, value] of Object.entries(result.headers ?? {})) {
+            response.setHeader(name, value);
+          }
+          response.end(result.body);
+        };
+
+        server.middlewares.stack.unshift({
+          route: "",
+          handle: priceFunctionMiddleware,
+        });
       },
     },
   ],
