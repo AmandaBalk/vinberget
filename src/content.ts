@@ -7,7 +7,7 @@ const sanityDataset = import.meta.env.VITE_SANITY_DATASET;
 const sanityApiVersion =
   import.meta.env.VITE_SANITY_API_VERSION ?? "2026-09-01";
 const CONTENT_CACHE_TTL_MS = 2 * 60 * 1000;
-const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:content-v3-sheet`;
+const CONTENT_CACHE_KEY = `vinberget-content-cache:${sanityProjectId ?? "none"}:${sanityDataset ?? "none"}:content-v4-local-sheet`;
 const imageUrlBuilder =
   sanityProjectId && sanityDataset
     ? createImageUrlBuilder({
@@ -246,21 +246,35 @@ function writeCachedContent(content: SiteContent): void {
 }
 
 export async function loadSiteContent(): Promise<SiteContent> {
-  if (!hasSanityConfig()) {
-    return fallbackContent;
-  }
-
   const cachedContent = readCachedContent();
   if (cachedContent) {
     return cachedContent;
   }
 
+  const [sheetRestaurantPrices, sheetPrivatePrices] = await Promise.all([
+    fetchSheetPrices("restaurant"),
+    fetchSheetPrices("private"),
+  ]);
+  const addSheetPrices = (content: SiteContent): SiteContent => ({
+    ...content,
+    restaurants: {
+      ...content.restaurants,
+      priceList: sheetRestaurantPrices ?? [],
+    },
+    privateCustomers: {
+      ...content.privateCustomers,
+      priceList: sheetPrivatePrices ?? [],
+    },
+  });
+
+  if (!hasSanityConfig()) {
+    const content = addSheetPrices(fallbackContent);
+    writeCachedContent(content);
+    return content;
+  }
+
   try {
     const bundle = await sanityFetch<SanityContentBundle>(contentBundleQuery);
-    const [sheetRestaurantPrices, sheetPrivatePrices] = await Promise.all([
-      fetchSheetPrices("restaurant"),
-      fetchSheetPrices("private"),
-    ]);
     const site = bundle.site ?? {};
     const producers = bundle.producers ?? [];
     const restaurants = bundle.restaurants ?? [];
@@ -292,17 +306,18 @@ export async function loadSiteContent(): Promise<SiteContent> {
           site.restaurantsIntro ??
           fallbackContent.restaurants.intro,
         partners: restaurants.length > 0 ? restaurants : [],
-        priceList: sheetRestaurantPrices ?? [],
+        priceList: [],
       },
       privateCustomers: {
         ...fallbackContent.privateCustomers,
         ...privateInfo,
-        priceList: sheetPrivatePrices ?? [],
+        priceList: [],
       },
     };
 
-    writeCachedContent(mergedContent);
-    return mergedContent;
+    const content = addSheetPrices(mergedContent);
+    writeCachedContent(content);
+    return content;
   } catch (error) {
     console.warn(
       "Using fallback content because Sanity could not be loaded.",
@@ -310,10 +325,8 @@ export async function loadSiteContent(): Promise<SiteContent> {
     );
 
     const staleCache = readCachedContent();
-    if (staleCache) {
-      return staleCache;
-    }
-
-    return fallbackContent;
+    const content = addSheetPrices(staleCache ?? fallbackContent);
+    writeCachedContent(content);
+    return content;
   }
 }
