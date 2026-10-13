@@ -1,6 +1,6 @@
 import { createImageUrlBuilder } from "@sanity/image-url";
 import type { SanityImageObject } from "@sanity/image-url";
-import type { SiteContent } from "./types";
+import type { PriceSortOrder, SiteContent } from "./types";
 
 const sanityProjectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const sanityDataset = import.meta.env.VITE_SANITY_DATASET;
@@ -57,6 +57,7 @@ const fallbackContent: SiteContent = {
   },
   restaurantsIntro: "",
   producers: [],
+  priceSortOrder: "price",
   restaurants: {
     pageTitle: "För restaurangkunder",
     contactPrompt: "För beställning av viner,",
@@ -97,7 +98,10 @@ type SanityContentBundle = {
 
 export async function fetchSheetPrices(
   audience: "restaurant" | "private",
-): Promise<SiteContent["restaurants"]["priceList"] | null> {
+): Promise<{
+  prices: SiteContent["restaurants"]["priceList"];
+  sortOrder: PriceSortOrder;
+} | null> {
   try {
     const response = await fetch(
       `/.netlify/functions/prices?audience=${audience}&_=${Date.now()}`,
@@ -109,8 +113,16 @@ export async function fetchSheetPrices(
 
     const payload = (await response.json()) as {
       prices?: SiteContent["restaurants"]["priceList"];
+      sortOrder?: PriceSortOrder;
     };
-    return Array.isArray(payload.prices) ? payload.prices : null;
+    if (!Array.isArray(payload.prices)) {
+      return null;
+    }
+    return {
+      prices: payload.prices,
+      sortOrder:
+        payload.sortOrder === "alphabetical" ? "alphabetical" : "price",
+    };
   } catch {
     return null;
   }
@@ -246,13 +258,17 @@ export async function loadSiteContent(): Promise<SiteContent> {
   ]);
   const addSheetPrices = (content: SiteContent): SiteContent => ({
     ...content,
+    priceSortOrder:
+      sheetRestaurantPrices?.sortOrder ??
+      sheetPrivatePrices?.sortOrder ??
+      content.priceSortOrder,
     restaurants: {
       ...content.restaurants,
-      priceList: sheetRestaurantPrices ?? [],
+      priceList: sheetRestaurantPrices?.prices ?? [],
     },
     privateCustomers: {
       ...content.privateCustomers,
-      priceList: sheetPrivatePrices ?? [],
+      priceList: sheetPrivatePrices?.prices ?? [],
     },
   });
 

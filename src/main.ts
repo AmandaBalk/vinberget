@@ -5,7 +5,13 @@ import heroImg from "./assets/hero.png";
 import brandLogoImg from "./assets/Logga_vinberget_mellan_transparent.png";
 import { getSanityImageUrl, loadSiteContent } from "./content";
 import { downloadRestaurantPricePdf } from "./restaurantPricePdf";
-import type { PageId, PriceRow, Producer, SiteContent } from "./types";
+import type {
+  PageId,
+  PriceRow,
+  PriceSortOrder,
+  Producer,
+  SiteContent,
+} from "./types";
 
 interface Route {
   page: PageId;
@@ -275,7 +281,20 @@ function priceLabel(row: PriceRow): string {
   return formatPrice(row.price);
 }
 
-function comparePriceRows(left: PriceRow, right: PriceRow): number {
+function comparePriceRows(
+  left: PriceRow,
+  right: PriceRow,
+  sortOrder: PriceSortOrder,
+): number {
+  if (sortOrder === "alphabetical") {
+    const byName = left.wine.localeCompare(right.wine, "sv", {
+      sensitivity: "base",
+    });
+    if (byName !== 0) {
+      return byName;
+    }
+  }
+
   const leftPrice = left.price
     ? Number(left.price.replace(",", "."))
     : Infinity;
@@ -377,6 +396,7 @@ function renderPriceTable(
 function renderProducerPriceList(
   rows: PriceRow[],
   producers: Producer[],
+  sortOrder: PriceSortOrder,
 ): string {
   if (rows.length === 0) {
     return '<p class="empty-state">Prislista publiceras inom kort.</p>';
@@ -424,7 +444,9 @@ function renderProducerPriceList(
     return {
       name,
       origin,
-      wines: [...uniqueWines.values()].sort(comparePriceRows),
+      wines: [...uniqueWines.values()].sort((left, right) =>
+        comparePriceRows(left, right, sortOrder),
+      ),
     };
   }).sort((left, right) =>
     left.name.localeCompare(right.name, "sv", { sensitivity: "base" }),
@@ -1074,7 +1096,7 @@ function renderRestaurantCustomers(content: SiteContent): string {
         <header class="restaurant-price-heading">
           <h2 id="restaurang-prislista">Prislista</h2>
         </header>
-        ${renderProducerPriceList(content.restaurants.priceList, content.producers)}
+        ${renderProducerPriceList(content.restaurants.priceList, content.producers, content.priceSortOrder)}
       </section>
     </section>
   `;
@@ -1108,7 +1130,7 @@ function renderPrivateCustomers(content: SiteContent): string {
         <header class="restaurant-price-heading private-price-heading">
           <h2 id="private-price-title">${escapeHtml(content.privateCustomers.priceListTitle)}</h2>
         </header>
-        ${renderProducerPriceList(content.privateCustomers.priceList, content.producers)}
+        ${renderProducerPriceList(content.privateCustomers.priceList, content.producers, content.priceSortOrder)}
       </section>
     </section>
   `;
@@ -1314,6 +1336,7 @@ function enableRestaurantPricePdf(content: SiteContent): void {
     downloadRestaurantPricePdf(
       content.restaurants.priceList,
       content.producers,
+      content.priceSortOrder,
     );
   });
 }

@@ -48,6 +48,8 @@ export interface PriceRow {
   notes?: string;
 }
 
+export type PriceSortOrder = "price" | "alphabetical";
+
 export interface SiteContent {
   siteName: string;
   tagline: string;
@@ -67,6 +69,7 @@ export interface SiteContent {
     imageUrl?: string;
   };
   producers: Producer[];
+  priceSortOrder: PriceSortOrder;
   restaurants: {
     pageTitle: string;
     contactPrompt: string;

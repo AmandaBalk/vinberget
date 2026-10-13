@@ -83,6 +83,16 @@ function normalizeWineColor(value) {
   return undefined;
 }
 
+function normalizeSortOrder(value) {
+  const sortOrder = value
+    .trim()
+    .toLocaleLowerCase("sv")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ");
+
+  return sortOrder === "alfabetiskt" ? "alphabetical" : "price";
+}
+
 function toPriceRow(values, headers, audience) {
   const get = (header) => values[headers.get(header)]?.trim() ?? "";
   const producer = get("producent");
@@ -154,6 +164,12 @@ export async function handler(event) {
     const headers = new Map(
       headerRow.map((header, index) => [normalizeHeader(header), index]),
     );
+    const sortColumn = [...headers.entries()].find(([header]) =>
+      header.startsWith("sortering"),
+    )?.[1];
+    const sortOrder = normalizeSortOrder(
+      sortColumn === undefined ? "" : (rows[0]?.[sortColumn] ?? ""),
+    );
     const requiredHeaders = [
       "producent",
       "vin",
@@ -184,7 +200,7 @@ export async function handler(event) {
         "cache-control":
           "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
       },
-      body: JSON.stringify({ prices }),
+      body: JSON.stringify({ prices, sortOrder }),
     };
   } catch (error) {
     console.error("Could not load prices from Google Sheets", error);

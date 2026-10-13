@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import brandLogoDataUrl from "./assets/Logga_vinberget_mellan_transparent.png?inline";
-import type { PriceRow, Producer } from "./types";
+import type { PriceRow, PriceSortOrder, Producer } from "./types";
 
 const ink: [number, number, number] = [48, 44, 39];
 const olive: [number, number, number] = [116, 105, 69];
@@ -18,7 +18,20 @@ function priceText(row: PriceRow): string {
   return /^\d+$/.test(price) ? `${price} kr` : price;
 }
 
-function comparePriceRows(left: PriceRow, right: PriceRow): number {
+function comparePriceRows(
+  left: PriceRow,
+  right: PriceRow,
+  sortOrder: PriceSortOrder,
+): number {
+  if (sortOrder === "alphabetical") {
+    const byName = left.wine.localeCompare(right.wine, "sv", {
+      sensitivity: "base",
+    });
+    if (byName !== 0) {
+      return byName;
+    }
+  }
+
   const leftPrice = left.price
     ? Number(left.price.replace(",", "."))
     : Infinity;
@@ -53,6 +66,7 @@ function capitalize(value: string): string {
 export function createRestaurantPricePdf(
   rows: PriceRow[],
   producers: Producer[],
+  sortOrder: PriceSortOrder = "price",
 ): jsPDF | null {
   if (rows.length === 0) {
     return null;
@@ -199,7 +213,9 @@ export function createRestaurantPricePdf(
         producerName.toLocaleLowerCase("sv"),
     );
     const displayName = producer?.name ?? producerName;
-    const orderedRows = [...producerRows].sort(comparePriceRows);
+    const orderedRows = [...producerRows].sort((left, right) =>
+      comparePriceRows(left, right, sortOrder),
+    );
     const categories: Array<[string, PriceRow[]]> = [];
     const sparklingWines = orderedRows.filter(
       (row) => row.wineColor === "Mousserande",
@@ -299,8 +315,9 @@ export function createRestaurantPricePdf(
 export function downloadRestaurantPricePdf(
   rows: PriceRow[],
   producers: Producer[],
+  sortOrder: PriceSortOrder = "price",
 ): void {
-  const document = createRestaurantPricePdf(rows, producers);
+  const document = createRestaurantPricePdf(rows, producers, sortOrder);
   if (!document) {
     return;
   }

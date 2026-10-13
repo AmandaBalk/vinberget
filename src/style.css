@@ -1123,7 +1123,8 @@ th,
   margin-top: 0.45rem;
   padding: 0 0 0.25rem;
   color: rgba(56, 51, 45, 0.8);
-  line-height: 1.58;
+  font-size: 14px;
+  line-height: 1.65;
 }
 
 .restaurants-page {
@@ -1196,8 +1197,7 @@ th,
 }
 
 .restaurants-page > p,
-.restaurants-page .price-item__notes,
-.restaurants-page .restaurant-entry__description {
+.restaurants-page .price-item__notes {
   font-size: 0.82rem;
   line-height: 1.6;
 }
