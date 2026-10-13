@@ -252,7 +252,9 @@ function formatBottleSize(value?: string | null): string {
   }
 
   const numericSize = normalized.match(/^(\d+)(?:\s*ml)?$/i)?.[1];
-  return numericSize ? `${numericSize} ML` : normalized.toUpperCase();
+  return numericSize
+    ? `${numericSize} ml`
+    : normalized.replace(/\bML\b/gi, "ml");
 }
 
 function formatPrice(value?: string): string {
@@ -271,6 +273,19 @@ function priceLabel(row: PriceRow): string {
   }
 
   return formatPrice(row.price);
+}
+
+function comparePriceRows(left: PriceRow, right: PriceRow): number {
+  const leftPrice = left.price
+    ? Number(left.price.replace(",", "."))
+    : Infinity;
+  const rightPrice = right.price
+    ? Number(right.price.replace(",", "."))
+    : Infinity;
+  if (leftPrice !== rightPrice) {
+    return leftPrice - rightPrice;
+  }
+  return left.wine.localeCompare(right.wine, "sv", { sensitivity: "base" });
 }
 
 function renderPriceTable(
@@ -409,9 +424,7 @@ function renderProducerPriceList(
     return {
       name,
       origin,
-      wines: [...uniqueWines.values()].sort((left, right) =>
-        left.wine.localeCompare(right.wine, "sv", { sensitivity: "base" }),
-      ),
+      wines: [...uniqueWines.values()].sort(comparePriceRows),
     };
   }).sort((left, right) =>
     left.name.localeCompare(right.name, "sv", { sensitivity: "base" }),
@@ -419,12 +432,19 @@ function renderProducerPriceList(
 
   const producerGroups = groups
     .map((group) => {
-      const redWines = group.wines.filter((wine) => wine.wineColor === "Rött");
+      const sparklingWines = group.wines.filter(
+        (wine) => wine.wineColor === "Mousserande",
+      );
       const whiteWines = group.wines.filter(
         (wine) => wine.wineColor === "Vitt",
       );
+      const roseWines = group.wines.filter((wine) => wine.wineColor === "Rosé");
+      const redWines = group.wines.filter((wine) => wine.wineColor === "Rött");
       const uncategorizedWines = group.wines.filter(
-        (wine) => wine.wineColor !== "Rött" && wine.wineColor !== "Vitt",
+        (wine) =>
+          !["Mousserande", "Vitt", "Rosé", "Rött"].includes(
+            wine.wineColor ?? "",
+          ),
       );
       const renderWineColorGroup = (title: string, wines: PriceRow[]) => {
         if (wines.length === 0) {
@@ -458,8 +478,10 @@ function renderProducerPriceList(
             </thead>
           </table>
         </div>
-        ${renderWineColorGroup("Rött", redWines)}
+        ${renderWineColorGroup("Mousserande", sparklingWines)}
         ${renderWineColorGroup("Vitt", whiteWines)}
+        ${renderWineColorGroup("Rosé", roseWines)}
+        ${renderWineColorGroup("Rött", redWines)}
         ${uncategorizedWines.length > 0 ? renderPriceTable(uncategorizedWines, false, false) : ""}
       </div>
     </section>

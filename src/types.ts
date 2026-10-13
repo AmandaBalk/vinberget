@@ -40,7 +40,7 @@ export interface PriceRow {
   producer: string;
   wine: string;
   vintage?: string;
-  wineColor?: "Rött" | "Vitt";
+  wineColor?: "Mousserande" | "Vitt" | "Rosé" | "Rött";
   bottle?: string | null;
   price?: string;
   isSoldOut?: boolean;

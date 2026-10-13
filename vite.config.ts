@@ -17,9 +17,7 @@ export default defineConfig({
           }
 
           const result = await handler({
-            queryStringParameters: Object.fromEntries(
-              requestUrl.searchParams,
-            ),
+            queryStringParameters: Object.fromEntries(requestUrl.searchParams),
           });
 
           response.statusCode = result.statusCode;

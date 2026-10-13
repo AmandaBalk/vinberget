@@ -101,7 +101,7 @@ export const producer = {
       title: "Om vinerna",
       type: "array",
       description:
-        "Formatera texten fritt med rubriker, stycken, listor och textmarkeringar.",
+        "Markera text för att använda fetstil eller kursiv stil. Rubriker och listor väljs i verktygsfältet.",
       of: [
         {
           type: "block",

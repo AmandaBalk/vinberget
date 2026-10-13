@@ -61,12 +61,24 @@ function normalizeHeader(value) {
 }
 
 function normalizeWineColor(value) {
-  const color = value.trim().toLocaleLowerCase("sv");
-  if (["rött", "röd", "r"].includes(color)) {
+  const color = value
+    .trim()
+    .toLocaleLowerCase("sv")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  if (["rott", "rod", "r"].includes(color)) {
     return "Rött";
   }
   if (["vitt", "vit", "v"].includes(color)) {
     return "Vitt";
+  }
+  if (["rose", "rosevin"].includes(color)) {
+    return "Rosé";
+  }
+  if (
+    ["mousserande", "mousserande vin", "bubbel", "sparkling"].includes(color)
+  ) {
+    return "Mousserande";
   }
   return undefined;
 }

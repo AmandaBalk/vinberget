@@ -18,6 +18,19 @@ function priceText(row: PriceRow): string {
   return /^\d+$/.test(price) ? `${price} kr` : price;
 }
 
+function comparePriceRows(left: PriceRow, right: PriceRow): number {
+  const leftPrice = left.price
+    ? Number(left.price.replace(",", "."))
+    : Infinity;
+  const rightPrice = right.price
+    ? Number(right.price.replace(",", "."))
+    : Infinity;
+  if (leftPrice !== rightPrice) {
+    return leftPrice - rightPrice;
+  }
+  return left.wine.localeCompare(right.wine, "sv", { sensitivity: "base" });
+}
+
 function bottleText(value?: string | null): string {
   const normalized = value?.trim() ?? "";
   const size = normalized.match(/^(\d+)(?:\s*ml)?$/i)?.[1];
@@ -186,20 +199,29 @@ export function createRestaurantPricePdf(
         producerName.toLocaleLowerCase("sv"),
     );
     const displayName = producer?.name ?? producerName;
-    const orderedRows = [...producerRows].sort((left, right) =>
-      left.wine.localeCompare(right.wine, "sv", { sensitivity: "base" }),
-    );
+    const orderedRows = [...producerRows].sort(comparePriceRows);
     const categories: Array<[string, PriceRow[]]> = [];
-    const redWines = orderedRows.filter((row) => row.wineColor === "Rött");
-    const whiteWines = orderedRows.filter((row) => row.wineColor === "Vitt");
-    const otherWines = orderedRows.filter(
-      (row) => row.wineColor !== "Rött" && row.wineColor !== "Vitt",
+    const sparklingWines = orderedRows.filter(
+      (row) => row.wineColor === "Mousserande",
     );
-    if (redWines.length > 0) {
-      categories.push(["Rött", redWines]);
+    const whiteWines = orderedRows.filter((row) => row.wineColor === "Vitt");
+    const roseWines = orderedRows.filter((row) => row.wineColor === "Rosé");
+    const redWines = orderedRows.filter((row) => row.wineColor === "Rött");
+    const otherWines = orderedRows.filter(
+      (row) =>
+        !["Mousserande", "Vitt", "Rosé", "Rött"].includes(row.wineColor ?? ""),
+    );
+    if (sparklingWines.length > 0) {
+      categories.push(["Mousserande", sparklingWines]);
     }
     if (whiteWines.length > 0) {
       categories.push(["Vitt", whiteWines]);
+    }
+    if (roseWines.length > 0) {
+      categories.push(["Rosé", roseWines]);
+    }
+    if (redWines.length > 0) {
+      categories.push(["Rött", redWines]);
     }
     if (otherWines.length > 0) {
       categories.push(["Övrigt", otherWines]);
